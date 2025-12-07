@@ -22,15 +22,25 @@ export const CartProvider = ({ children }) => {
   const addToCart = (product) => {
     console.log('Add product to cart ', product);
     setCart((prevCart) => {
-      const existing = prevCart.find((item) => item.id === product.id);
+      // Tạo unique key dựa trên id + selectedSize + sku để phân biệt các biến thể
+      const productKey = `${product.id}-${product.selectedSize || 'no-size'}-${product.sku || 'no-sku'}`;
+      
+      const existing = prevCart.find((item) => {
+        const itemKey = `${item.id}-${item.selectedSize || 'no-size'}-${item.sku || 'no-sku'}`;
+        return itemKey === productKey;
+      });
+      
       if (existing) {
-        return prevCart.map((item) =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + product.quantity }
-            : item
-        );
+        // Nếu đã có sản phẩm với cùng id, size và sku, cộng dồn số lượng
+        return prevCart.map((item) => {
+          const itemKey = `${item.id}-${item.selectedSize || 'no-size'}-${item.sku || 'no-sku'}`;
+          return itemKey === productKey
+            ? { ...item, quantity: item.quantity + (product.quantity || 1) }
+            : item;
+        });
       }
-      return [...prevCart, product];
+      // Thêm sản phẩm mới vào giỏ hàng
+      return [...prevCart, { ...product, quantity: product.quantity || 1 }];
     });
   };
 

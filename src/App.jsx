@@ -11,6 +11,8 @@ import "./App.css";
 
 import FilterContainer from './components/Filter/FilterContainer';
 import Cart from "./pages/Cart";
+import Checkout from "./pages/Checkout";
+import CheckoutPreview from "./pages/CheckoutPreview";
 import ChatbotPage from "./pages/ChatBotDemo";
 import Dashboard from "./pages/Admin/Dashboard";
 import ProductEditor from "./pages/Admin/ProductEditor";
@@ -39,6 +41,8 @@ function App() {
               element={<ProductCategoryPage />}
             />
             <Route path="/cart" element={<Cart />} />
+            <Route path="/checkout" element={<Checkout />} />
+            <Route path="/checkout-preview" element={<CheckoutPreview />} />
             <Route path="/chatbot" element={<ChatbotPage />} />
             <Route path="/404" element={<Error />} />
           </Route>

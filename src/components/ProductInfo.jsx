@@ -20,27 +20,39 @@ const ProductInfo = ({ product, variations = [], highlights }) => {
     setQuantity(1);
   }, [product?.id, sizeVariations]);
 
-  const selectedVariation = sizeVariations.find(
-    (variation) => variation.size === selectedSize
-  );
-  const isAddToCartDisabled =
-    !selectedVariation || quantity <= 0 || selectedVariation.quantity <= 0;
+  const selectedVariation = sizeVariations.length > 0 
+    ? sizeVariations.find((variation) => variation.size === selectedSize)
+    : null;
+  
+  // Nếu không có variations, cho phép thêm vào giỏ hàng
+  // Nếu có variations, phải chọn size và size phải còn hàng
+  const isAddToCartDisabled = sizeVariations.length > 0
+    ? (!selectedVariation || quantity <= 0 || selectedVariation.quantity <= 0)
+    : quantity <= 0;
 
   const handleAddToCart = (product) => {
     if (isAddToCartDisabled) return;
     console.log("product" + JSON.stringify(product));
 
-    const payload = {
-      ...product,
-      selectedSize: selectedVariation.size,
-      sku: selectedVariation.sku,
-      price: selectedVariation.price ?? product?.price,
-    };
+    // Nếu có variation, dùng giá và thông tin từ variation
+    // Nếu không có variation, dùng thông tin từ product
+    const payload = selectedVariation
+      ? {
+          ...product,
+          selectedSize: selectedVariation.size,
+          sku: selectedVariation.sku,
+          price: selectedVariation.price ?? product?.price,
+          image: product?.image || product?.thumbnail?.[0] || '',
+        }
+      : {
+          ...product,
+          image: product?.image || product?.thumbnail?.[0] || '',
+          price: product?.price,
+        };
 
     console.log('handleAddToCart ', { ...payload, quantity: quantity });
     addToCart({ ...payload, quantity: quantity });
     navigate('/cart');
-
   }
   const formatPrice = (price) => {
     return price

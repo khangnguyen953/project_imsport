@@ -22,13 +22,37 @@ const ProductDetailPopup = ({ isOpen, product, onClose }) => {
             .replace(/\u00A0/g, '') + ' VNĐ';
     }
     const sizeVariations = product?.variations || [];
-    // (Rule 3): Nút bị vô hiệu hóa nếu chưa chọn size HOẶC số lượng <= 0
-    const isAddToCartDisabled = !selectedSize || quantity <= 0;
+    // Nếu không có variations, cho phép thêm vào giỏ hàng
+    // Nếu có variations, phải chọn size
+    const isAddToCartDisabled = sizeVariations.length > 0
+        ? (!selectedSize || quantity <= 0)
+        : quantity <= 0;
 
     // Hàm xử lý khi nhấn nút
     const handleAddToCart = (product) => {
         if (isAddToCartDisabled) return;
-        addToCart({ ...product, quantity: quantity, selectedSize: selectedSize });
+        
+        // Tìm variation được chọn (nếu có)
+        const selectedVariation = sizeVariations.length > 0 && selectedSize
+            ? sizeVariations.find(v => v.size === selectedSize)
+            : null;
+        
+        const payload = selectedVariation
+            ? {
+                ...product,
+                quantity: quantity,
+                selectedSize: selectedSize,
+                sku: selectedVariation.sku,
+                price: selectedVariation.price ?? product.price,
+                image: product.image || product.thumbnail?.[0] || '',
+            }
+            : {
+                ...product,
+                quantity: quantity,
+                image: product.image || product.thumbnail?.[0] || '',
+            };
+        
+        addToCart(payload);
         navigate('/cart');
         onClose();
     };

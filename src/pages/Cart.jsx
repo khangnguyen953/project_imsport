@@ -65,9 +65,9 @@ const Cart = () => {
 
                                         </div>
                                         <div className=''>
-                                            {cart.map((item) => (
-                                                <div key={item.id} className='border-y-[1px] border-[#ebebeb] py-4 flex gap-x-2'>
-                                                    <div className='text-center md:w-[15%] w-[25%]'><Link to={`/product/${item.id}`}><img src={item.image} alt={item.name} className='w-full object-cover' /></Link></div>
+                                            {cart.map((item, index) => (
+                                                <div key={`${item.id}-${item.selectedSize || 'no-size'}-${index}`} className='border-y-[1px] border-[#ebebeb] py-4 flex gap-x-2'>
+                                                    <div className='text-center md:w-[15%] w-[25%]'><Link to={`/product/${item.id}`}><img src={item.image || item.thumbnail?.[0] || ''} alt={item.name} className='w-full object-cover' /></Link></div>
                                                     <div className='md:flex md:w-[50%] w-[55%] items-center'>
                                                         <div className='text-left md:w-[70%] w-full px-1'><Link to={`/product/${item.id}`} className='hover:text-[#673AB7] text-[#333333] md:font-normal font-semibold md:uppercase normal-case text-sm'>{item.name}</Link></div>
                                                         <div className='md:text-center text-start md md:w-[30%] px-1 w-full md:text-[#858688] text-[#673AB7] md:font-semibold font-normal text-sm '><span className='md:hidden inline-block text-[#898989]'>Giá:</span> {formatPrice(Number(item.price))}</div>
@@ -109,11 +109,9 @@ const Cart = () => {
                                                     </span>
                                                 )}
                                             </div>
-                                            <Link to='/' className='block md:hidden text-center text-sm bg-[#673AB7] py-2.5 px-10 mt-3 rounded-full text-white font-light uppercase'>Tiến hành thanh toán</Link>
+                                            <Link to='/checkout' className='block md:hidden text-center text-sm bg-[#673AB7] py-2.5 px-10 mt-3 rounded-full text-white font-light uppercase'>Tiến hành thanh toán</Link>
                                             <div className='relative group/icon hidden md:block'>
-                                                <Tooltip className to="/" label="Đặt hàng" tooltip="Tiến hành thanh toán" />
-                                                {/* <Link to='/' className='hidden md:block text-center text-sm bg-[#673AB7] py-2.5 px-10 rounded-full text-white font-light  md:normal-case'>Đặt hàng</Link> */}
-                                                
+                                                <Link to='/checkout' className='hidden md:block text-center text-sm bg-[#673AB7] py-2.5 px-10 rounded-full text-white font-light  md:normal-case'>Tiến hành thanh toán</Link>
                                             </div>
                                         </div>
                                     </div>
