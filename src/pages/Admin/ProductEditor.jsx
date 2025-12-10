@@ -165,13 +165,23 @@ export default function ProductEditor() {
   };
 
   const handleAddVariation = () => {
-    setFormData((prev) => ({
-      ...prev,
-      variations: [
-        ...(prev.variations || []),
-        { sku: "", size: "", price: "", quantity: "" },
-      ],
-    }));
+    setFormData((prev) => {
+      const existingVariations = prev.variations || [];
+      // Tìm ID lớn nhất trong danh sách variations hiện tại
+      const maxId = existingVariations.length > 0
+        ? Math.max(...existingVariations.map(v => v.id || 0))
+        : 0;
+      // Tạo ID mới = maxId + 1 để đảm bảo không trùng
+      const newId = maxId + 1;
+      
+      return {
+        ...prev,
+        variations: [
+          ...existingVariations,
+          { variation_id: newId, sku: "", size: "", price: "", quantity: "" },
+        ],
+      };
+    });
   };
 
   const handleRemoveVariation = (index) => {

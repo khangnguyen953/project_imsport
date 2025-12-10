@@ -18,6 +18,8 @@ import "./i18next/i18next";
 import { I18nextProvider } from "react-i18next";
 import i18n from "./i18next/i18next";
 import Error from "./pages/Error";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
 function App() {
   return (
     <I18nextProvider i18n={i18n}>
@@ -39,8 +41,10 @@ function App() {
               element={<ProductCategoryPage />}
             />
             <Route path="/cart" element={<Cart />} />
-            <Route path="/chatbot" element={<ChatbotPage />} />
             <Route path="/404" element={<Error />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/chatbot" element={<ChatbotPage />} />
           </Route>
           <Route path="/admin">
             <Route index element={<Dashboard />} />

@@ -28,16 +28,16 @@ const ProductInfo = ({ product, variations = [], highlights }) => {
 
   const handleAddToCart = (product) => {
     if (isAddToCartDisabled) return;
-    console.log("product" + JSON.stringify(product));
 
     const payload = {
       ...product,
       selectedSize: selectedVariation.size,
       sku: selectedVariation.sku,
       price: selectedVariation.price ?? product?.price,
+      variationId: selectedVariation.variation_id,
     };
 
-    console.log('handleAddToCart ', { ...payload, quantity: quantity });
+    console.log('handleAddToCart ', { ...payload, quantity: quantity })
     addToCart({ ...payload, quantity: quantity });
     navigate('/cart');
 

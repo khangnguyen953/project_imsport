@@ -10,7 +10,6 @@ const ProductDetailPopup = ({ isOpen, product, onClose }) => {
     const [quantity, setQuantity] = useState(1);
     const [selectedSize, setSelectedSize] = useState(null); 
     const navigate = useNavigate();
-    console.log('product', product);
     useEffect(() => {
         if (!product) return;
         setQuantity(1);
@@ -25,10 +24,20 @@ const ProductDetailPopup = ({ isOpen, product, onClose }) => {
     // (Rule 3): Nút bị vô hiệu hóa nếu chưa chọn size HOẶC số lượng <= 0
     const isAddToCartDisabled = !selectedSize || quantity <= 0;
 
+    // Tìm variation được chọn
+    const selectedVariation = sizeVariations.find(
+        (variation) => variation.size === selectedSize
+    );
+
     // Hàm xử lý khi nhấn nút
     const handleAddToCart = (product) => {
         if (isAddToCartDisabled) return;
-        addToCart({ ...product, quantity: quantity, selectedSize: selectedSize });
+        addToCart({ 
+            ...product, 
+            quantity: quantity, 
+            selectedSize: selectedSize,
+            variationId: selectedVariation?.id 
+        });
         navigate('/cart');
         onClose();
     };

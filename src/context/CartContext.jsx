@@ -1,17 +1,31 @@
 import { createContext, useContext, useEffect, useState } from "react";
+import CartAPI from "../service/CartAPI";
 
 const CartContext = createContext();
 
 export const CartProvider = ({ children }) => {
   const [cart, setCart] = useState([]);
-
+  const [userId, setUserId] = useState(JSON.parse(localStorage.getItem('user'))?.id || null);
+  const [cartCount, setCartCount] = useState(0);
   // 🔹 Load dữ liệu giỏ hàng từ localStorage khi app khởi động
+
   useEffect(() => {
-    const storedCart = JSON.parse(localStorage.getItem("cart")) || [];
-    if (storedCart.length > 0) {
-      setCart(storedCart);
+    const fetchCart = async () => {
+      const storedCart = JSON.parse(localStorage.getItem("cart")) || [];
+
+      if (userId) {
+        const response = await CartAPI.getCart(userId);
+        console.log('response', response);
+
+          setCart(response.productList || []);
+          setCartCount(response.productList.length);
+      } else {
+        setCart(storedCart);
+        setCartCount(storedCart.length);
+      }
     }
-  }, []);
+    fetchCart();
+  }, [userId]);
 
   // 🔹 Tự động lưu giỏ hàng vào localStorage mỗi khi thay đổi
   useEffect(() => {
@@ -19,19 +33,44 @@ export const CartProvider = ({ children }) => {
   }, [cart]);
 
   // 🛒 Thêm sản phẩm
-  const addToCart = (product) => {
-    console.log('Add product to cart ', product);
-    setCart((prevCart) => {
-      const existing = prevCart.find((item) => item.id === product.id);
-      if (existing) {
-        return prevCart.map((item) =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + product.quantity }
-            : item
-        );
+  const addToCart = async (product) => {
+    console.log('product', product);
+    if (userId) {
+      const payload = {
+        user_id: userId,
+        product_id: product.id,
+        quantity: product.quantity,
+        variation_id: product.variationId,
       }
-      return [...prevCart, product];
-    });
+      console.log('addToCart API', payload);
+      const response = await CartAPI.addToCart(payload);
+      console.log('response', response);
+      if (response) {
+        const responseCart = await CartAPI.getCart(userId);
+        setCart(responseCart.productList || []);
+        setCartCount(responseCart.productList.length);
+      }
+    } else {
+      console.log('addToCart Local Storage');
+      setCart((prevCart) => {
+        // Tìm item trùng cả product_id (id) và variation.id (variationId)
+        const existing = prevCart.find((item) =>
+          item.id === product.id && item.variationId === product.variationId
+        );
+
+        if (existing) {
+          // Nếu trùng cả product_id và variation.id thì tăng số lượng
+          return prevCart.map((item) =>
+            item.id === product.id && item.variationId === product.variationId
+              ? { ...item, quantity: item.quantity + product.quantity }
+              : item
+          );
+        }
+        // Ngược lại thì thêm mới
+        return [...prevCart, product];
+      });
+      setCartCount(cart.length);
+    }
   };
 
   // 🔄 Cập nhật số lượng
@@ -49,17 +88,16 @@ export const CartProvider = ({ children }) => {
   };
 
   // 🧮 Tổng số lượng
-  const cartCount = cart.length;
 
   // 🧾 Tổng tiền (nếu cần)
-  const totalPrice = cart.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
-  );
+  // const totalPrice = cart.reduce(
+  //   (sum, item) => sum + item.price * item.quantity,
+  //   0
+  // );
 
   return (
     <CartContext.Provider
-      value={{ cart, addToCart, updateQuantity, removeFromCart, cartCount, totalPrice }}
+      value={{ cart, addToCart, updateQuantity, removeFromCart, cartCount, userId, setUserId }}
     >
       {children}
     </CartContext.Provider>
