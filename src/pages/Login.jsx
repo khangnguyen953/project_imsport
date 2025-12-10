@@ -10,11 +10,11 @@ const Login = () => {
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const { setUserId } = useCart();
-    // useEffect(() => {
-    //     if (localStorage.getItem('token')) {
-    //         navigate('/')
-    //     }
-    // }, [navigate]);
+    useEffect(() => {
+        if (localStorage.getItem('token')) {
+            navigate('/')
+        }
+    }, [navigate]);
   const handleLogin = async () => {
     setError(''); // Xóa lỗi cũ
     setIsLoading(true);

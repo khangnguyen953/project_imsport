@@ -27,7 +27,7 @@ import { LogOutIcon } from "lucide-react";
 
 export default function Header() {
   const [showMobileSearch, setShowMobileSearch] = useState(false);
-  const { cartCount, setUserId} = useCart();
+  const { cartCount, setUserId, setCartCount} = useCart();
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeSubmenu, setActiveSubmenu] = useState(null);
@@ -133,6 +133,7 @@ export default function Header() {
     localStorage.removeItem('user');
     localStorage.removeItem('token');
     setUserId(null);
+    setCartCount(0);
     navigate('/');
   };
 

@@ -25,8 +25,8 @@ const Cart = () => {
     const handleQuantityChange = (id, value) => {
         updateQuantity(id, value);
     }
-    const handleDelete = (id) => {
-        removeFromCart(id);
+    const handleDelete = (id, variationId) => {
+        removeFromCart(id, variationId);
     }
     return (
         <>
@@ -83,7 +83,7 @@ const Cart = () => {
                                                                 onChange={(e) => handleQuantityChange(item.id, e.target.value === '' || Number(e.target.value) <= 0 ? 0 : Number(e.target.value))} />
                                                         </div>
                                                         <div className='text-center w-[40%] text-[#858688] font-semibold text-sm md:block hidden'>{formatPrice(Number(item.price) * (Number(item.quantity) || 1))}</div>
-                                                        <div className='text-center  md:w-[30%] w-full text-sm'><button onClick={() => handleDelete(item.id)} className='text-[#363636] hover:text-[#673AB7] md:mt-0 mt-4'>Xóa</button></div>
+                                                        <div className='text-center  md:w-[30%] w-full text-sm'><button onClick={() => handleDelete(item.id, item.variationId)} className='text-[#363636] hover:text-[#673AB7] md:mt-0 mt-4'>Xóa</button></div>
                                                     </div>
                                                 </div>
                                             ))}
