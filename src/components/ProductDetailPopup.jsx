@@ -10,7 +10,6 @@ const ProductDetailPopup = ({ isOpen, product, onClose }) => {
     const [quantity, setQuantity] = useState(1);
     const [selectedSize, setSelectedSize] = useState(null); 
     const navigate = useNavigate();
-    console.log('product', product);
     useEffect(() => {
         if (!product) return;
         setQuantity(1);
@@ -22,37 +21,23 @@ const ProductDetailPopup = ({ isOpen, product, onClose }) => {
             .replace(/\u00A0/g, '') + ' VNĐ';
     }
     const sizeVariations = product?.variations || [];
-    // Nếu không có variations, cho phép thêm vào giỏ hàng
-    // Nếu có variations, phải chọn size
-    const isAddToCartDisabled = sizeVariations.length > 0
-        ? (!selectedSize || quantity <= 0)
-        : quantity <= 0;
+    // (Rule 3): Nút bị vô hiệu hóa nếu chưa chọn size HOẶC số lượng <= 0
+    const isAddToCartDisabled = !selectedSize || quantity <= 0;
+
+    // Tìm variation được chọn
+    const selectedVariation = sizeVariations.find(
+        (variation) => variation.size === selectedSize
+    );
 
     // Hàm xử lý khi nhấn nút
     const handleAddToCart = (product) => {
         if (isAddToCartDisabled) return;
-        
-        // Tìm variation được chọn (nếu có)
-        const selectedVariation = sizeVariations.length > 0 && selectedSize
-            ? sizeVariations.find(v => v.size === selectedSize)
-            : null;
-        
-        const payload = selectedVariation
-            ? {
-                ...product,
-                quantity: quantity,
-                selectedSize: selectedSize,
-                sku: selectedVariation.sku,
-                price: selectedVariation.price ?? product.price,
-                image: product.image || product.thumbnail?.[0] || '',
-            }
-            : {
-                ...product,
-                quantity: quantity,
-                image: product.image || product.thumbnail?.[0] || '',
-            };
-        
-        addToCart(payload);
+        addToCart({ 
+            ...product, 
+            quantity: quantity, 
+            selectedSize: selectedSize,
+            variationId: selectedVariation?.id 
+        });
         navigate('/cart');
         onClose();
     };

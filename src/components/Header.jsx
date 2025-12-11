@@ -23,10 +23,11 @@ import CategoryTypeAPI from "../service/CategoryTypeAPI";
 import { useTranslation } from "react-i18next";
 import i18n from "../i18next/i18next";
 import ProductAPI from "../service/ProductAPI";
+import { LogOutIcon } from "lucide-react";
 
 export default function Header() {
   const [showMobileSearch, setShowMobileSearch] = useState(false);
-  const { cartCount } = useCart();
+  const { cartCount, setUserId, setCartCount} = useCart();
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeSubmenu, setActiveSubmenu] = useState(null);
@@ -128,6 +129,13 @@ export default function Header() {
     setShowSearchResults(false);
     navigate(`/product/${productId}`);
   };
+  const handleLogout = () => {
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
+    setUserId(null);
+    setCartCount(0);
+    navigate('/');
+  };
 
 
   return (
@@ -217,7 +225,7 @@ export default function Header() {
 
             {/* User */}
             <li className="hidden md:flex items-center">
-              <Link to="/user" className="hover:text-orange-500">
+              <Link to="/login" className="hover:text-orange-500">
                 <UserIcon className="h-5 w-5 text-gray-500" />
               </Link>
             </li>
@@ -249,6 +257,13 @@ export default function Header() {
                 onClick={() => handleLanguageChange("en")}
               />
             </li>
+            {localStorage.getItem('user') && (
+              <li className="flex items-center">
+                <button onClick={handleLogout} className="hover:text-orange-500">
+                  <LogOutIcon className="h-5 w-5 text-gray-600" />
+                </button>
+              </li>
+            )}
           </ul>
         </div>
 

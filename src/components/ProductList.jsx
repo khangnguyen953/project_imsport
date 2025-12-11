@@ -124,7 +124,7 @@ const ProductList = ({ products }) => {
     const [product, setProduct] = useState(null)
     const [currentPage, setCurrentPage] = useState(searchParams.get("page") ?? 1)
     // const page = parseInt(searchParams.get("page")) || 1;
-    const productPerPage = 3;
+    const productPerPage = 10;
     const indexOfLastProduct = currentPage * productPerPage;
     const indexOfFirstProduct = indexOfLastProduct - productPerPage;
     const currentProducts = products.slice(indexOfFirstProduct, indexOfLastProduct);

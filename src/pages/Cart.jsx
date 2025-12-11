@@ -9,6 +9,7 @@ const Cart = () => {
     const { cart, updateQuantity, removeFromCart, totalPrice } = useCart();
     const [position, setPosition] = useState({ x: 0, y: 0 });
     const [show, setShow] = useState(false);
+    console.log('cart', cart);
     useEffect(() => {
         window.scrollTo(0, 0);
     }, []);
@@ -24,8 +25,8 @@ const Cart = () => {
     const handleQuantityChange = (id, value) => {
         updateQuantity(id, value);
     }
-    const handleDelete = (id) => {
-        removeFromCart(id);
+    const handleDelete = (id, variationId) => {
+        removeFromCart(id, variationId);
     }
     return (
         <>
@@ -65,11 +66,11 @@ const Cart = () => {
 
                                         </div>
                                         <div className=''>
-                                            {cart.map((item, index) => (
-                                                <div key={`${item.id}-${item.selectedSize || 'no-size'}-${index}`} className='border-y-[1px] border-[#ebebeb] py-4 flex gap-x-2'>
-                                                    <div className='text-center md:w-[15%] w-[25%]'><Link to={`/product/${item.id}`}><img src={item.image || item.thumbnail?.[0] || ''} alt={item.name} className='w-full object-cover' /></Link></div>
+                                            {cart && cart.length > 0 && cart.map((item, index) => (
+                                                <div key={index} className='border-y-[1px] border-[#ebebeb] py-4 flex gap-x-2'>
+                                                    <div className='text-center md:w-[15%] w-[25%]'><Link to={`/product/${item.id}`}><img src={item.image} alt={item.name} className='w-full object-cover' /></Link></div>
                                                     <div className='md:flex md:w-[50%] w-[55%] items-center'>
-                                                        <div className='text-left md:w-[70%] w-full px-1'><Link to={`/product/${item.id}`} className='hover:text-[#673AB7] text-[#333333] md:font-normal font-semibold md:uppercase normal-case text-sm'>{item.name}</Link></div>
+                                                        <div className='text-left md:w-[70%] w-full px-1'><Link to={`/product/${item.id}`} className='hover:text-[#673AB7] text-[#333333] md:font-normal font-semibold md:uppercase normal-case text-sm'>{item.name} - {item.variations.find(variation => variation.variation_id === item.variationId)?.size}</Link></div>
                                                         <div className='md:text-center text-start md md:w-[30%] px-1 w-full md:text-[#858688] text-[#673AB7] md:font-semibold font-normal text-sm '><span className='md:hidden inline-block text-[#898989]'>Giá:</span> {formatPrice(Number(item.price))}</div>
                                                     </div>
                                                     <div className='md:flex md:w-[35%] w-[20%] items-center'>
@@ -82,7 +83,7 @@ const Cart = () => {
                                                                 onChange={(e) => handleQuantityChange(item.id, e.target.value === '' || Number(e.target.value) <= 0 ? 0 : Number(e.target.value))} />
                                                         </div>
                                                         <div className='text-center w-[40%] text-[#858688] font-semibold text-sm md:block hidden'>{formatPrice(Number(item.price) * (Number(item.quantity) || 1))}</div>
-                                                        <div className='text-center  md:w-[30%] w-full text-sm'><button onClick={() => handleDelete(item.id)} className='text-[#363636] hover:text-[#673AB7] md:mt-0 mt-4'>Xóa</button></div>
+                                                        <div className='text-center  md:w-[30%] w-full text-sm'><button onClick={() => handleDelete(item.id, item.variationId)} className='text-[#363636] hover:text-[#673AB7] md:mt-0 mt-4'>Xóa</button></div>
                                                     </div>
                                                 </div>
                                             ))}

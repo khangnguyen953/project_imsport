@@ -48,7 +48,7 @@ const Breadcrumb = ({ category, subcategory, otherSlugName = null }) => {
   }
   if (otherSlugName) {
     breadcrumbItems.push({
-      name: otherSlugName.translations[i18n.language].name,
+      name: otherSlugName,
       slug: `/${otherSlugName.slug}`,
     });
   }
