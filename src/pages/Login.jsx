@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import AuthAPI from '../service/AuthAPI';
 import { useCart } from '../context/CartContext';
+import CartAPI from '../service/CartAPI';
 
 const Login = () => {
     const navigate = useNavigate();
@@ -9,7 +10,7 @@ const Login = () => {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    const { setUserId } = useCart();
+    const { cart, setUserId, setCart, setCartCount } = useCart();
     useEffect(() => {
         if (localStorage.getItem('token')) {
             navigate('/')
@@ -36,6 +37,29 @@ const Login = () => {
         localStorage.setItem('token', loginResponse.token)
         localStorage.setItem('user', JSON.stringify(loginResponse.user))
         setUserId(loginResponse.user.id);
+        const payload = {
+          user_id: loginResponse.user.id,
+          action: 'merge',
+          local_cart: cart.map(item => ({
+            product_id: item.id,
+            quantity: item.quantity,
+            variation_id: item.variationId,
+          })),
+        }
+        const response = await CartAPI.mergeCart(payload);
+        if (response) {
+          const responseCart = await CartAPI.getCart(loginResponse.user.id);
+          setCart(responseCart.productList || []);
+          localStorage.setItem('cart', JSON.stringify([]))
+          setCartCount(responseCart.productList.length);
+
+        }
+        console.log('Cart sau khi merge', response);
+        if (response.error) {
+          setError(response.error || 'Merge cart thất bại. Vui lòng thử lại.');
+          setIsLoading(false);
+          return;
+        }
         navigate('/')
       } else {
         setError('Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin đăng nhập.');
