@@ -17,8 +17,8 @@ export const CartProvider = ({ children }) => {
         const response = await CartAPI.getCart(userId);
         console.log('response', response);
 
-          setCart(response.productList || []);
-          setCartCount(response.productList.length);
+        setCart(response.productList || []);
+        setCartCount(response.productList.length);
       } else {
         setCart(storedCart);
         setCartCount(storedCart.length);

@@ -20,11 +20,15 @@ const ProductInfo = ({ product, variations = [], highlights }) => {
     setQuantity(1);
   }, [product?.id, sizeVariations]);
 
-  const selectedVariation = sizeVariations.find(
-    (variation) => variation.size === selectedSize
-  );
-  const isAddToCartDisabled =
-    !selectedVariation || quantity <= 0 || selectedVariation.quantity <= 0;
+  const selectedVariation = sizeVariations.length > 0 
+    ? sizeVariations.find((variation) => variation.size === selectedSize)
+    : null;
+  
+  // Nếu không có variations, cho phép thêm vào giỏ hàng
+  // Nếu có variations, phải chọn size và size phải còn hàng
+  const isAddToCartDisabled = sizeVariations.length > 0
+    ? (!selectedVariation || quantity <= 0 || selectedVariation.quantity <= 0)
+    : quantity <= 0;
 
   const handleAddToCart = (product) => {
     if (isAddToCartDisabled) return;
@@ -40,7 +44,6 @@ const ProductInfo = ({ product, variations = [], highlights }) => {
     console.log('handleAddToCart ', { ...payload, quantity: quantity })
     addToCart({ ...payload, quantity: quantity });
     navigate('/cart');
-
   }
   const formatPrice = (price) => {
     return price
