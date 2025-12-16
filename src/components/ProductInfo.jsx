@@ -3,13 +3,15 @@ import { HeartIcon } from "@heroicons/react/24/outline";
 import { useCart } from "../context/CartContext";
 
 import { useNavigate } from "react-router-dom";
-
+import { useTranslation } from 'react-i18next'
 
 
 const ProductInfo = ({ product, variations = [], highlights }) => {
   const [selectedSize, setSelectedSize] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const { addToCart } = useCart();
+  const { t, i18n } = useTranslation();
+  const language = i18n.language;
   const navigate = useNavigate();
 
   const sizeVariations = useMemo(() => (
@@ -56,24 +58,24 @@ const ProductInfo = ({ product, variations = [], highlights }) => {
     <div className="w-full md:w-[90%] text-gray-800">
       {/* Tên sản phẩsm */}
       <h1 className="text-2xl font-semibold mb-3 break-words leading-snug">
-        {product?.name}
+        {product?.translations[language].name}
       </h1>
 
       {/* Thương hiệu + Mã sản phẩm */}
       <p className="text-sm mb-6 border-b border-gray-200 pb-5">
-        Thương hiệu:{" "}
-        <span className="text-[#898989]">{product?.brand}</span> | Mã SP:{" "}
+        {t("productInfo.brand")}:{" "}
+        <span className="text-[#898989]">{product?.brand}</span> | {t("productInfo.productCode")}:{" "}
         <span className="text-[#898989]">{product?.id}</span>
       </p>
 
       {/* Giá */}
       <p className=" text-black pb-4 ">
-        Giá: <span className=" text-2xl">{formatPrice(Number(selectedVariation?.price ?? product?.price ?? 0))}</span>
+        {t("productInfo.price")}: <span className=" text-2xl">{formatPrice(Number(selectedVariation?.price ?? product?.price ?? 0))}</span>
       </p>
 
       {/* Chọn size */}
       <div className="mb-6">
-        <p className="font-medium mb-3">Chọn size:</p>
+        <p className="font-medium mb-3">{t("productInfo.selectSize")}:</p>
         <div className="flex flex-wrap gap-2">
           {sizeVariations.map(({ sku, size, quantity }) => {
             const isOutOfStock = quantity === 0;
@@ -99,13 +101,13 @@ const ProductInfo = ({ product, variations = [], highlights }) => {
             );
           })}
           {!sizeVariations.length && (
-            <p className="text-sm text-gray-500">Hiện chưa có size cho sản phẩm này.</p>
+            <p className="text-sm text-gray-500">{t("productInfo.noSize")}</p>
           )}
         </div>
       </div>
 
       {/* Số lượng + Nút giỏ hàng */}
-      <p className="font-medium mb-4">Số lượng:</p>
+      <p className="font-medium mb-4">{t("productInfo.quantity")}:</p>
 
       <div className="pb-6 border-gray-200 md:mb-6 flex md:flex-nowrap flex-wrap items-center gap-4 md:h-10">
         <div className="w-full sm:w-auto flex items-center">
@@ -132,7 +134,7 @@ const ProductInfo = ({ product, variations = [], highlights }) => {
             onClick={() => handleAddToCart(product)} // Thêm onClick
             disabled={isAddToCartDisabled} // Thêm trạng thái disabled
           >
-            Thêm vào giỏ hàng
+            {t("productInfo.addToCart")}
           </button>
 
           <button className="w-10 h-10 border border-gray-300 rounded-full flex items-center justify-center transition-all">
@@ -143,7 +145,7 @@ const ProductInfo = ({ product, variations = [], highlights }) => {
 
       {/* Đặc điểm nổi bật (Giữ nguyên) */}
       <div className="pt-5 border-t border-gray-200">
-        <h3 className="text-red-600 font-semibold mb-3">Đặc điểm nổi bật</h3>
+        <h3 className="text-red-600 font-semibold mb-3">{t("productInfo.highlight")}</h3>
         <ul className="text-gray-700 space-y-1 mb-4">
           {highlights.map((item, i) => (
             <li
@@ -155,7 +157,7 @@ const ProductInfo = ({ product, variations = [], highlights }) => {
           ))}
         </ul>
 
-        <p className="text-gray-600 text-sm">Thông tin thêm về sản phẩm</p>
+        <p className="text-gray-600 text-sm">{t("productInfo.moreInfo")}</p>
       </div>
     </div>
   );

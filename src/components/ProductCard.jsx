@@ -5,9 +5,11 @@ import GiftBadge from './GiftBadge'
 import ProductAction from './ProductAction'
 import ProductDetailPopup from './ProductDetailPopup'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 
 const ProductCard = ({ item, isList = false, isRelated = true }) => {
-
+  const { i18n } = useTranslation();
+  const language = i18n.language;
   const [modalOpen, setModalOpen] = useState(false)
   const quickView = (id) => {
     setModalOpen(true)
@@ -41,7 +43,7 @@ const ProductCard = ({ item, isList = false, isRelated = true }) => {
         </Link>
       </div>
       <div className='px-4 pb-5 md:text-end text-center'>
-        <Link to={`/product/${item.id}`} className='line-clamp-2 font-semibold text-base text-center' title={item.name}>{item.name}</Link>
+        <Link to={`/product/${item.id}`} className='line-clamp-2 font-semibold text-base text-center' title={item.translations[language].name}>{item.translations[language].name}</Link>
         <div className='my-1 text-center md:mr-3 '>
           <p className='text-[15px] font-bold  text-[#ff8c00] '>{formatPrice(Number(item.price))}</p>
           {item.originalPrice != item.price && <p className='text-sm font-normal  text-[#adadad] line-through '>{formatPrice(Number(item.originalPrice))}</p>}

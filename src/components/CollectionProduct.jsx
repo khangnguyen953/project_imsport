@@ -7,6 +7,7 @@ import ProductAPI from '../service/ProductAPI'
 import { product2 } from '../data/product2'
 import { categories } from '../data/categories'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 const data =
 {
     title: 'Đồ Nam',
@@ -88,6 +89,8 @@ const data =
 
 const CollectionProduct = () => {
     const [products, setProducts] = useState()
+    const { t, i18n } = useTranslation();
+    const language = i18n.language;
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -110,7 +113,7 @@ const CollectionProduct = () => {
         <>
             <div className='container mx-auto !pt-10'>
                 <h3 className='text-[28px] uppercase text-center mb-10'>
-                    <Link to='/do-nam' className='text-[#333333] hover:text-[#673AB7] font-semibold'>Đồ Nam</Link>
+                    <Link to='/do-nam' className='text-[#333333] hover:text-[#673AB7] font-semibold'>{t("collection.doNam")}</Link>
                 </h3>
                 <div className='grid grid-cols-1 min-[1000px]:grid-cols-2'>
                     <div className='col-span-1 px-4'>

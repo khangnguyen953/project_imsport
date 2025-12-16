@@ -12,7 +12,7 @@ import { useTranslation } from "react-i18next";
 
 
 
-const ProductSlider = ({ title, items }) => (
+const ProductSlider = ({ title, items, language }) => (
   <div className="w-full flex flex-col items-center py-10 overflow-hidden">
     <h3 className="text-2xl uppercase font-semibold text-center mt-10 mb-10">{title}</h3>
 
@@ -29,13 +29,13 @@ const ProductSlider = ({ title, items }) => (
             />
             <img
               src={item?.thumbnail?.[0]}
-              alt={item.name}
+              alt={item.translations[language].name}
               className="w-full h-auto object-cover absolute top-0 right-full group-hover:right-0 transition-all duration-500"
             />
           </div>
           <div className="px-2 pb-4 mt-2 text-center">
             <a href={`/product/${item.id}`} className="line-clamp-2 font-semibold text-sm">
-              {item.name}
+              {item.translations[language].name}
             </a>
             {item.isDiscount !== 0 && item.originalPrice && (
               <p className="text-sm text-[#adadad] line-through">{item.originalPrice}</p>
@@ -62,9 +62,9 @@ const ProductSlider = ({ title, items }) => (
                 alt={item.name}
                 className="w-full h-auto object-cover group-hover:scale-0 transition-all duration-500"
               />
-              <img
+              <img  
                 src={item?.thumbnail?.[0]}
-                alt={item.name}
+                alt={item.translations[language].name}
                 className="w-full h-auto object-cover absolute top-0 right-full group-hover:right-0 transition-all duration-500"
               />
             </div>
@@ -73,9 +73,9 @@ const ProductSlider = ({ title, items }) => (
             <a
               href={`/product/${item.id}`}
               className="line-clamp-2 font-medium text-sm"
-              title={item.name}
+              title={item.translations[language].name}
             >
-              {item.name}
+              {item.translations[language].name}
             </a>
             {item.isDiscount !== 0 && item.originalPrice && (
               <p className="text-xs text-[#adadad] line-through mt-1">
@@ -113,12 +113,12 @@ const ProductSlider = ({ title, items }) => (
                 <div className="relative w-full aspect-[1/1.1] overflow-hidden">
                   <img
                     src={item.image}
-                    alt={item.name}
+                    alt={item.translations[language].name}
                     className="w-full h-auto object-cover group-hover:scale-0 transition-all duration-500"
                   />
                   <img
                     src={item.thumbnail[0]}
-                    alt={item.name}
+                    alt={item.translations[language].name}
                     className="w-full h-auto object-cover absolute top-0 right-full group-hover:right-0 transition-all duration-500"
                   />
                 </div>
@@ -127,9 +127,9 @@ const ProductSlider = ({ title, items }) => (
                 <a
                   href={`/product/${item.id}`}
                   className="line-clamp-2 font-medium text-sm"
-                  title={item.name}
+                  title={item.translations[language].name}
                 >
-                  {item.name}
+                  {item.translations[language].name}
                 </a>
                 {item.isDiscount !== 0 &&(
                   <p className="text-xs text-[#adadad] line-through mt-1">
@@ -162,10 +162,12 @@ const ProductSlider = ({ title, items }) => (
 const ProductsSection = () => {
   const [newProducts, setNewProducts] = useState([]);
   const [saleProducts, setSaleProducts] = useState([]);
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const language = i18n.language;
   useEffect(() => {
     const fetchNewProducts = async () => {
       const response = await ProductAPI.getProducts();
+      console.log('response', response);
       setNewProducts(response.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 7));
       setSaleProducts(response.filter(p => p.price < p.originalPrice));
     }
@@ -174,8 +176,8 @@ const ProductsSection = () => {
   }, []);
   return (
     <>
-      <ProductSlider title={t("products.newProducts")} items={newProducts} />
-      <ProductSlider title={t("products.saleProducts")} items={saleProducts} />
+      <ProductSlider title={t("products.newProducts")} items={newProducts} language={language} />
+      <ProductSlider title={t("products.saleProducts")} items={saleProducts} language={language} />
     </>
   );
 };

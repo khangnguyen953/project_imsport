@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { bgchitietanh, sizechitiet } from "../assets/ExportImage";
-
+import { useTranslation } from 'react-i18next'
 const componentData = {
   "Tên sản phẩm": "Giày Chạy Bộ Nam Running Cloudboom Max - Lime/Raspberry",
   "Thương hiệu": "On Running",
@@ -84,20 +84,25 @@ const ComponentContent = ({ data }) => {
   );
 };
 
-const ProductDescriptionTabs = ({ description }) => {
-  const [activeTab, setActiveTab] = useState("Mô tả chi tiết");
-  const tabs = ["Mô tả chi tiết","Thành phần"];
+const ProductDescriptionTabs = ({ translations }) => {
+  const { t, i18n } = useTranslation();
+  const language = i18n.language;
+  // Sử dụng key tab thay vì text dịch trực tiếp, tránh lỗi khi đổi ngôn ngữ
+  const [activeTab, setActiveTab] = useState("description");
+  const tabs = ["description", "ingredients"];
+  console.log(translations[language]?.description);
 
   const renderContent = (tab) => {
+    console.log(translations[language]);
     switch (tab) {
-      case "Mô tả chi tiết":
+      case "description":
         return (
           <div
             className="prose max-w-none text-gray-700"
-            dangerouslySetInnerHTML={{ __html: description }}
+            dangerouslySetInnerHTML={{ __html: translations[language]?.description}}
           />
         );
-      case "Thành phần":
+      case "ingredients":
         return <ComponentContent data={componentData} />;
       default:
         return null;
@@ -120,21 +125,17 @@ const ProductDescriptionTabs = ({ description }) => {
                     : "text-gray-600 hover:bg-gray-100 bg-gray-50 border-t border-x"
                 }`}
             >
-              {tab}
+              {t(`productDescriptionTabs.${tab}`)}
             </button>
           ))}
         </div>
 
         <div className="border border-gray-300 rounded-b">
-          {activeTab === "Thành phần" ? (
+          {activeTab === "description" ? (
             <div className="p-4 md:px-5 md:py-10">
               <div className="border border-gray-300">
                 {renderContent(activeTab)}
               </div>
-            </div>
-          ) : activeTab === "Mô tả chi tiết" ? (
-            <div className="p-4 md:px-40 md:py-10">
-              {renderContent(activeTab)}
             </div>
           ) : (
             <div className="p-4">{renderContent(activeTab)}</div>
@@ -153,7 +154,7 @@ const ProductDescriptionTabs = ({ description }) => {
                 activeTab === tab ? "text-[#673AB7]" : "text-gray-800"
               }`}
             >
-              <span>{tab}</span>
+              <span>{t(`productDescriptionTabs.${tab}`)}</span>
               {activeTab !== tab && (
                 <span className="absolute right-3 text-gray-600 text-lg select-none">
                   ⌄

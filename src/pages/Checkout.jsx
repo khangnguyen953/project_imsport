@@ -5,11 +5,12 @@ import Breadcrumb from '../components/Filter/Breadcrumb';
 import CheckoutAPI from '../service/CheckoutAPI';
 import { validateCheckoutForm, formatOrderData } from '../utils/checkoutValidation';
 import '../styles/pages/Checkout.scss';
-
+import { useTranslation } from 'react-i18next';
 const Checkout = () => {
     const { cart, totalPrice } = useCart();
     const navigate = useNavigate();
-    
+    const { t, i18n } = useTranslation();
+    const language = i18n.language;
     // Form state
     const [formData, setFormData] = useState({
         fullName: '',
@@ -58,8 +59,8 @@ const Checkout = () => {
             loadDistricts(formData.province);
             // Reset district and ward when province changes
             setFormData(prev => ({ ...prev, district: '', ward: '' }));
-            setDistricts([]);
-            setWards([]);
+            // setDistricts([]);
+            // setWards([]);
         }
     }, [formData.province]);
 
@@ -69,7 +70,7 @@ const Checkout = () => {
             loadWards(formData.district);
             // Reset ward when district changes
             setFormData(prev => ({ ...prev, ward: '' }));
-            setWards([]);
+            // setWards([]);
         }
     }, [formData.district]);
 
@@ -91,7 +92,7 @@ const Checkout = () => {
             ]);
         } catch (error) {
             console.error('Error loading provinces:', error);
-            setError('Không thể tải danh sách tỉnh/thành phố');
+            setError(t('checkout.loadProvincesError'));
         } finally {
             setIsLoadingAddress(false);
         }
@@ -104,7 +105,6 @@ const Checkout = () => {
             // TODO: Uncomment khi API sẵn sàng
             // const data = await CheckoutAPI.getDistricts(provinceId);
             // setDistricts(data);
-            
             // Tạm thời dùng dummy data
             setDistricts([
                 { id: 1, name: 'Quận 1' },
@@ -115,7 +115,7 @@ const Checkout = () => {
             ]);
         } catch (error) {
             console.error('Error loading districts:', error);
-            setError('Không thể tải danh sách quận/huyện');
+            setError(t('checkout.loadDistrictsError'));
         } finally {
             setIsLoadingAddress(false);
         }
@@ -139,17 +139,22 @@ const Checkout = () => {
             ]);
         } catch (error) {
             console.error('Error loading wards:', error);
-            setError('Không thể tải danh sách phường/xã');
+            setError(t('checkout.loadWardsError'));
         } finally {
             setIsLoadingAddress(false);
         }
     };
 
     const formatPrice = (price) => {
-        return price.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })
-            .replace('₫', '')
-            .replace(/\s/g, '')
-            .replace(/\u00A0/g, '') + ' VNĐ';
+        const locale = language === 'vi' ? 'vi-VN' : 'en-US';
+        const currencyString = price.toLocaleString(locale, { style: 'currency', currency: 'VND' });
+        if (language === 'vi') {
+            return currencyString
+                .replace('₫', '')
+                .replace(/\s/g, '')
+                .replace(/\u00A0/g, '') + ' VNĐ';
+        }
+        return currencyString;
     };
 
     const handleInputChange = (e) => {
@@ -171,7 +176,7 @@ const Checkout = () => {
     // Apply discount code
     const handleApplyDiscount = async () => {
         if (!discountCode.trim()) {
-            setError('Vui lòng nhập mã giảm giá');
+            setError(t('checkout.discountErrorEmpty'));
             return;
         }
 
@@ -186,12 +191,12 @@ const Checkout = () => {
             // Tạm thời: Mock response
             setDiscountApplied({
                 discount: 100000,
-                message: 'Áp dụng mã giảm giá thành công'
+                message: t('checkout.discountSuccess')
             });
             setError(null);
         } catch (error) {
             console.error('Error applying discount:', error);
-            setError(error.response?.data?.message || 'Mã giảm giá không hợp lệ');
+            setError(error.response?.data?.message || t('checkout.discountErrorInvalid'));
             setDiscountApplied(null);
         } finally {
             setIsLoading(false);
@@ -205,7 +210,7 @@ const Checkout = () => {
 
         // Validate terms
         if (!agreeTerms) {
-            setError('Vui lòng đồng ý với điều kiện và chính sách giao hàng');
+            setError(t('checkout.agreeTermsError'));
             return;
         }
 
@@ -213,7 +218,7 @@ const Checkout = () => {
         const validation = validateCheckoutForm(formData);
         if (!validation.isValid) {
             setFormErrors(validation.errors);
-            setError('Vui lòng kiểm tra lại thông tin đã nhập');
+            setError(t('checkout.formError'));
             return;
         }
 
@@ -242,7 +247,7 @@ const Checkout = () => {
             console.log('Order data to send:', orderData);
             const result = {
                 orderId: 'ORD-' + Date.now(),
-                message: 'Đặt hàng thành công!'
+                message: t('checkout.orderSuccessMessage')
             };
 
             // Nếu là chuyển khoản, có thể cần xác nhận thanh toán
@@ -252,14 +257,14 @@ const Checkout = () => {
             }
 
             // Redirect to success page hoặc hiển thị thông báo
-            alert(`Đặt hàng thành công! Mã đơn hàng: ${result.orderId}`);
+            alert(t('checkout.orderSuccessAlert', { orderId: result.orderId }));
             
             // Clear cart và redirect
             // navigate('/order-success', { state: { orderId: result.orderId } });
             
         } catch (error) {
             console.error('Error creating order:', error);
-            setError(error.response?.data?.message || 'Có lỗi xảy ra khi đặt hàng. Vui lòng thử lại!');
+            setError(error.response?.data?.message || t('checkout.orderError'));
         } finally {
             setIsLoading(false);
         }
@@ -273,18 +278,18 @@ const Checkout = () => {
 
     return (
         <div className="checkout-page">
-            <Breadcrumb otherSlugName="Thanh toán" />
+            <Breadcrumb otherSlugName={t('checkout.breadcrumb')} />
             <div className="container">
-                <h1 className="checkout-title">THANH TOÁN</h1>
+                <h1 className="checkout-title">{t('checkout.title')}</h1>
                 
                 <div className="checkout-content">
                     {/* Bên trái: Thông tin hóa đơn */}
                     <div className="checkout-section billing-info">
-                        <h2 className="section-title">Thông tin hóa đơn</h2>
+                        <h2 className="section-title">{t('checkout.billingInfo')}</h2>
                         <form onSubmit={handleSubmit}>
                             <div className="form-group">
                                 <label htmlFor="fullName">
-                                    Họ và tên<span className="required">*</span>
+                                    {t('checkout.fullName')}<span className="required">*</span>
                                 </label>
                                 <input
                                     type="text"
@@ -302,7 +307,7 @@ const Checkout = () => {
 
                             <div className="form-group">
                                 <label htmlFor="email">
-                                    Email<span className="required">*</span>
+                                    {t('checkout.email')}<span className="required">*</span>
                                 </label>
                                 <input
                                     type="email"
@@ -320,7 +325,7 @@ const Checkout = () => {
 
                             <div className="form-group">
                                 <label htmlFor="phone">
-                                    Điện thoại<span className="required">*</span>
+                                    {t('checkout.phone')}<span className="required">*</span>
                                 </label>
                                 <input
                                     type="tel"
@@ -328,7 +333,7 @@ const Checkout = () => {
                                     name="phone"
                                     value={formData.phone}
                                     onChange={handleInputChange}
-                                    placeholder="Số điện thoại"
+                                    placeholder={t('checkout.phonePlaceholder')}
                                     className={formErrors.phone ? 'error' : ''}
                                     required
                                 />
@@ -339,7 +344,7 @@ const Checkout = () => {
 
                             <div className="form-group">
                                 <label htmlFor="address">
-                                    Địa chỉ<span className="required">*</span>
+                                    {t('checkout.address')}<span className="required">*</span>
                                 </label>
                                 <input
                                     type="text"
@@ -358,7 +363,7 @@ const Checkout = () => {
                             <div className="form-row">
                                 <div className="form-group form-group-half">
                                     <label htmlFor="province">
-                                        Tỉnh/ Thành phố<span className="required">*</span>
+                                        {t('checkout.province')}<span className="required">*</span>
                                     </label>
                                     <select
                                         id="province"
@@ -369,7 +374,7 @@ const Checkout = () => {
                                         disabled={isLoadingAddress}
                                         required
                                     >
-                                        <option value="">Chọn Tỉnh/ thành phố</option>
+                                        <option value="">{t('checkout.provincePlaceholder')}</option>
                                         {provinces.map((province) => (
                                             <option key={province.id} value={province.id}>
                                                 {province.name}
@@ -383,7 +388,7 @@ const Checkout = () => {
 
                                 <div className="form-group form-group-half">
                                     <label htmlFor="district">
-                                        Quận/ Huyện<span className="required">*</span>
+                                        {t('checkout.district')}<span className="required">*</span>
                                     </label>
                                     <select
                                         id="district"
@@ -394,7 +399,7 @@ const Checkout = () => {
                                         disabled={!formData.province || isLoadingAddress}
                                         required
                                     >
-                                        <option value="">Chọn Quận/ Huyện</option>
+                                        <option value="">{t('checkout.districtPlaceholder')}</option>
                                         {districts.map((district) => (
                                             <option key={district.id} value={district.id}>
                                                 {district.name}
@@ -409,7 +414,7 @@ const Checkout = () => {
 
                             <div className="form-group">
                                 <label htmlFor="ward">
-                                    Phường/ Xã<span className="required">*</span>
+                                    {t('checkout.ward')}<span className="required">*</span>
                                 </label>
                                 <select
                                     id="ward"
@@ -420,7 +425,7 @@ const Checkout = () => {
                                     disabled={!formData.district || isLoadingAddress}
                                     required
                                 >
-                                    <option value="">Chọn Phường/ Xã</option>
+                                    <option value="">{t('checkout.wardPlaceholder')}</option>
                                     {wards.map((ward) => (
                                         <option key={ward.id} value={ward.id}>
                                             {ward.name}
@@ -433,14 +438,14 @@ const Checkout = () => {
                             </div>
 
                             <div className="form-group">
-                                <label htmlFor="notes">Ghi chú đơn hàng</label>
+                                <label htmlFor="notes">{t('checkout.orderNotes')}</label>
                                 <textarea
                                     id="notes"
                                     name="notes"
                                     value={formData.notes}
                                     onChange={handleInputChange}
                                     rows="4"
-                                    placeholder="Ghi chú thêm cho đơn hàng (tùy chọn)"
+                                    placeholder={t('checkout.orderNotesPlaceholder')}
                                 />
                             </div>
                         </form>
@@ -448,7 +453,7 @@ const Checkout = () => {
 
                     {/* Giữa: Phương thức thanh toán */}
                     <div className="checkout-section payment-method">
-                        <h2 className="section-title">Phương thức thanh toán</h2>
+                        <h2 className="section-title">{t('checkout.paymentMethod')}</h2>
                         
                         <div className="payment-option">
                             <label className="radio-label">
@@ -459,7 +464,7 @@ const Checkout = () => {
                                     checked={paymentMethod === 'cod'}
                                     onChange={(e) => setPaymentMethod(e.target.value)}
                                 />
-                                <span>Thanh toán tiền mặt khi nhận hàng (COD)</span>
+                                <span>{t('checkout.paymentCod')}</span>
                             </label>
                         </div>
 
@@ -472,15 +477,15 @@ const Checkout = () => {
                                     checked={paymentMethod === 'bank'}
                                     onChange={(e) => setPaymentMethod(e.target.value)}
                                 />
-                                <span>Chuyển khoản qua ngân hàng</span>
+                                <span>{t('checkout.paymentBank')}</span>
                             </label>
                             
                             {paymentMethod === 'bank' && (
                                 <div className="bank-info">
-                                    <p><strong>Tên công ty:</strong> Công Ty TNHH Thể Thao Thung Lũng Mặt Trời</p>
-                                    <p><strong>Số tài khoản:</strong> 116600115858</p>
-                                    <p><strong>Ngân hàng:</strong> Ngân hàng TMCP Công Thương Việt Nam (Viettinbank)</p>
-                                    <p><strong>Nội dung chuyển khoản:</strong> Số Điện Thoại + Sản Phẩm Mua</p>
+                                    <p><strong>{t('checkout.bankCompanyNameLabel')}</strong> {t('checkout.bankCompanyName')}</p>
+                                    <p><strong>{t('checkout.bankAccountNumberLabel')}</strong> {t('checkout.bankAccountNumber')}</p>
+                                    <p><strong>{t('checkout.bankNameLabel')}</strong> {t('checkout.bankName')}</p>
+                                    <p><strong>{t('checkout.bankTransferContentLabel')}</strong> {t('checkout.bankTransferContent')}</p>
                                 </div>
                             )}
                         </div>
@@ -488,23 +493,23 @@ const Checkout = () => {
 
                     {/* Bên phải: Thông tin giỏ hàng */}
                     <div className="checkout-section cart-info">
-                        <h2 className="section-title">Thông tin giỏ hàng</h2>
+                        <h2 className="section-title">{t('checkout.cartInfo')}</h2>
                         
                         <div className="cart-table">
                             <table>
                                 <thead>
                                     <tr>
-                                        <th>Tên sản phẩm</th>
-                                        <th>Số lượng</th>
-                                        <th>Giá</th>
+                                        <th>{t('checkout.productNameColumn')}</th>
+                                        <th>{t('checkout.quantityColumn')}</th>
+                                        <th>{t('checkout.priceColumn')}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {cart.map((item) => (
-                                        <tr key={item.id}>
+                                    {cart.map((item, index) => (
+                                        <tr key={index}>
                                             <td>
                                                 <Link to={`/product/${item.id}`} className="product-link">
-                                                    {item.name}
+                                                    {item.name[language].name}
                                                 </Link>
                                             </td>
                                             <td>{item.quantity}</td>
@@ -517,34 +522,34 @@ const Checkout = () => {
 
                         <div className="cart-summary">
                             <div className="summary-row">
-                                <span>Tạm tính:</span>
+                                <span>{t('checkout.subtotal')}</span>
                                 <span>{formatPrice(subtotal)}</span>
                             </div>
                             {discountApplied && (
                                 <div className="summary-row discount">
-                                    <span>Giảm giá:</span>
+                                    <span>{t('checkout.discount')}</span>
                                     <span>-{formatPrice(discountAmount)}</span>
                                 </div>
                             )}
                             <div className="summary-row">
-                                <span>Phí vận chuyển:</span>
+                                <span>{t('checkout.shippingFee')}</span>
                                 <span>{formatPrice(shippingFee)}</span>
                             </div>
                             <div className="summary-row total">
-                                <span>Tổng cộng:</span>
+                                <span>{t('checkout.total')}</span>
                                 <span>{formatPrice(total)}</span>
                             </div>
                         </div>
 
                         <div className="discount-section">
-                            <label htmlFor="discountCode">Nhập mã ưu đãi</label>
+                            <label htmlFor="discountCode">{t('checkout.discountCodeLabel')}</label>
                             <div className="discount-input-group">
                                 <input
                                     type="text"
                                     id="discountCode"
                                     value={discountCode}
                                     onChange={(e) => setDiscountCode(e.target.value)}
-                                    placeholder="Nhập vào nếu có"
+                                    placeholder={t('checkout.discountCodePlaceholder')}
                                     disabled={isLoading}
                                 />
                                 <button 
@@ -553,7 +558,7 @@ const Checkout = () => {
                                     onClick={handleApplyDiscount}
                                     disabled={isLoading || !discountCode.trim()}
                                 >
-                                    {isLoading ? 'Đang xử lý...' : 'Áp dụng'}
+                                    {isLoading ? t('checkout.applying') : t('checkout.applyDiscount')}
                                 </button>
                             </div>
                             {discountApplied && (
@@ -569,7 +574,7 @@ const Checkout = () => {
 
                         <div className="checkout-actions">
                             <Link to="/cart" className="btn-continue" onClick={(e) => isLoading && e.preventDefault()}>
-                                Tiếp tục mua hàng
+                                {t('checkout.continueShopping')}
                             </Link>
                             <button 
                                 type="button" 
@@ -577,7 +582,7 @@ const Checkout = () => {
                                 onClick={handleSubmit}
                                 disabled={isLoading}
                             >
-                                {isLoading ? 'Đang xử lý...' : 'Tiến hành thanh toán'}
+                                {isLoading ? t('checkout.applying') : t('checkout.proceedToCheckout')}
                             </button>
                         </div>
 
@@ -588,7 +593,7 @@ const Checkout = () => {
                                     checked={agreeTerms}
                                     onChange={(e) => setAgreeTerms(e.target.checked)}
                                 />
-                                <span>Tôi đồng ý với điều kiện và chính sách giao hàng của website</span>
+                                <span>{t('checkout.agreeTerms')}</span>
                             </label>
                         </div>
                     </div>

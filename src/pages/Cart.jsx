@@ -5,12 +5,13 @@ import { useCart } from '../context/CartContext';
 import { ChevronLeftIcon } from 'lucide-react';
 import Tooltip from '../components/Tooltip';
 import CartAPI from '../service/CartAPI';
-
+import { useTranslation } from 'react-i18next'; 
 const Cart = () => {
     const { cart, updateQuantity, removeFromCart, userId } = useCart();
     const [position, setPosition] = useState({ x: 0, y: 0 });
     const [show, setShow] = useState(false);
-    console.log('cart', cart);
+    const { t, i18n } = useTranslation();
+    const language = i18n.language;
     useEffect(() => {
         window.scrollTo(0, 0);
     }, []);
@@ -61,25 +62,25 @@ const Cart = () => {
 
 return (
     <>
-        <Breadcrumb otherSlugName="Giỏ hàng" />
+        <Breadcrumb otherSlugName={t("cart.cart")} />
         <div className="container">
             <div className="w-full">
                 <div className="col-span-1">
-                    <h1 className='text-2xl font-semibold text-[#363636] md:my-7 my-5 uppercase '>Giỏ hàng</h1>
+                    <h1 className='text-2xl font-semibold text-[#363636] md:my-7 my-5 uppercase '>{t("cart.cart")}</h1>
                     <div className='flex justify-between items-center'>
-                        <h3 className='block md:hidden text-base font-normal text-[#363636] mb-3 uppercase  '>Giỏ hàng của bạn</h3>
+                        <h3 className='block md:hidden text-base font-normal text-[#363636] mb-3 uppercase  '>{t("cart.yourCart")}</h3>
                         {cart.length === 0 &&
-                            <Link to='/' className='block md:hidden text-center text-sm text-[#673AB7]'>Cửa hàng</Link>
+                            <Link to='/' className='block md:hidden text-center text-sm text-[#673AB7]'>{t("cart.store")}</Link>
                         }
                     </div>
                     {cart.length === 0 ? (
                         <div>
-                            <div className='block md:hidden text-start text-xs text-[#858688] pt-5'>Chưa có sản phẩm nào, Nhấn vào cửa hàng để mua</div>
-                            <div className='hidden md:block text-start text-xs text-[#858688] '>Giỏ hàng trống</div>
+                            <div className='block md:hidden text-start text-xs text-[#858688] pt-5'>{t("cart.noProducts")}</div>
+                            <div className='hidden md:block text-start text-xs text-[#858688] '>{t("cart.emptyCart")}</div>
                             <Link to='/' className='hidden md:flex items-center text-sm  text-[#363636] font-lighter mt-5'>
                                 <ChevronLeftIcon strokeWidth={3} className="h-5 w-5 text-black font-black" />
 
-                                Trang chủ</Link>
+                                {t("cart.home")}</Link>
                         </div>
                     ) : (
 
@@ -88,12 +89,12 @@ return (
                             <div className="col-span-1">
                                 <div className='w-full'>
                                     <div className='border-b-[1px] border-[#ebebeb] md:flex hidden '>
-                                        <div className='text-center p-2 font-bold text-[#363636] w-[15%]'>Hình ảnh</div>
-                                        <div className='text-center p-2 font-bold text-[#363636] w-[35%]'>Tên sản phẩm</div>
-                                        <div className='text-center p-2 font-bold text-[#363636] w-[15%]'>Đơn giá</div>
-                                        <div className='text-center p-2 font-bold text-[#363636] w-[10%]'>Số lượng</div>
-                                        <div className='text-center p-2 font-bold text-[#363636] w-[15%]'>Thành tiền</div>
-                                        <div className='text-center p-2 font-bold text-[#363636] w-[10%]'>Xóa</div>
+                                        <div className='text-center p-2 font-bold text-[#363636] w-[15%]'>{t("cart.image")}</div>
+                                        <div className='text-center p-2 font-bold text-[#363636] w-[35%]'>{t("cart.productName")}</div>
+                                        <div className='text-center p-2 font-bold text-[#363636] w-[15%]'>{t("cart.price")}</div>
+                                        <div className='text-center p-2 font-bold text-[#363636] w-[10%]'>{t("cart.quantity")}</div>
+                                        <div className='text-center p-2 font-bold text-[#363636] w-[15%]'>{t("cart.total")}</div>
+                                        <div className='text-center p-2 font-bold text-[#363636] w-[10%]'>{t("cart.delete")}</div>
 
                                     </div>
                                     <div className=''>
@@ -101,7 +102,7 @@ return (
                                             <div key={index} className='border-y-[1px] border-[#ebebeb] py-4 flex gap-x-2'>
                                                 <div className='text-center md:w-[15%] w-[25%]'><Link to={`/product/${item.id}`}><img src={item.image} alt={item.name} className='w-full object-cover' /></Link></div>
                                                 <div className='md:flex md:w-[50%] w-[55%] items-center'>
-                                                    <div className='text-left md:w-[70%] w-full px-1'><Link to={`/product/${item.id}`} className='hover:text-[#673AB7] text-[#333333] md:font-normal font-semibold md:uppercase normal-case text-sm'>{item.name} - {item.variations.find(variation => variation.variation_id === item.variationId)?.size}</Link></div>
+                                                    <div className='text-left md:w-[70%] w-full px-1'><Link to={`/product/${item.id}`} className='hover:text-[#673AB7] text-[#333333] md:font-normal font-semibold md:uppercase normal-case text-sm'>{item.name[language].name} - {item.variations.find(variation => variation.variation_id === item.variationId)?.size}</Link></div>
                                                     <div className='md:text-center text-start md md:w-[30%] px-1 w-full md:text-[#858688] text-[#673AB7] md:font-semibold font-normal text-sm '><span className='md:hidden inline-block text-[#898989]'>Giá:</span> {formatPrice(Number(item.price))}</div>
                                                 </div>
                                                 <div className='md:flex md:w-[35%] w-[20%] items-center'>
@@ -111,21 +112,21 @@ return (
                                                             onChange={(e) => handleQuantityChange(item.id, item.variationId, e.target.value === '' || Number(e.target.value) <= 0 ? 0 : Number(e.target.value))} />
                                                     </div>
                                                     <div className='text-center w-[40%] text-[#858688] font-semibold text-sm md:block hidden'>{formatPrice(Number(item.price) * (Number(item.quantity) || 1))}</div>
-                                                    <div className='text-center  md:w-[30%] w-full text-sm'><button onClick={() => handleDelete(item.id, item.variationId)} className='text-[#363636] hover:text-[#673AB7] md:mt-0 mt-4'>Xóa</button></div>
+                                                    <div className='text-center  md:w-[30%] w-full text-sm'><button onClick={() => handleDelete(item.id, item.variationId)} className='text-[#363636] hover:text-[#673AB7] md:mt-0 mt-4'>{t("cart.delete")}</button></div>
                                                 </div>
                                             </div>
                                         ))}
                                     </div>
                                 </div>
                                 <div className=''>
-                                    <div className='flex gap-x-2 md:justify-end justify-between items-center mt-8  text-[#673AB7] md:font-semibold font-normal md:text-lg text-base'><span className='text-[#1c1c1c] mr-2 uppercase md:normal-case'>Tổng tiền:</span> {formatPrice(Number(cart.reduce((total, item) => total + Number(item.price) * Number(item.quantity), 0)))}</div>
+                                    <div className='flex gap-x-2 md:justify-end justify-between items-center mt-8  text-[#673AB7] md:font-semibold font-normal md:text-lg text-base'><span className='text-[#1c1c1c] mr-2 uppercase md:normal-case'>{t("cart.total")}:</span> {formatPrice(Number(cart.reduce((total, item) => total + Number(item.price) * Number(item.quantity), 0)))}</div>
                                     <div className='flex md:flex-row flex-col-reverse gap-x-4 gap-y-2 justify-end mt-2'>
                                         <div
                                             className="relative inline-block"
                                             onMouseMove={handleMouseMove}
                                             onMouseEnter={() => { setShow(true) }}
                                             onMouseLeave={() => setShow(false)}>
-                                            <Link to='/' className='block text-center text-sm bg-[#f1f1f1] py-3 px-10 rounded-full text-black  font-lighter uppercase md:normal-case'>Tiếp tục mua hàng</Link>
+                                            <Link to='/' className='block text-center text-sm bg-[#f1f1f1] py-3 px-10 rounded-full text-black  font-lighter uppercase md:normal-case'>{t("cart.continueShopping")}</Link>
                                             {show && (
                                                 <span
                                                     className="absolute bg-black text-white text-xs px-2 py-1 rounded whitespace-nowrap transition-opacity duration-100"
@@ -134,13 +135,13 @@ return (
                                                         top: `${position.y + 20}px`,
                                                     }}
                                                 >
-                                                    Tiến tục mua hàng
+                                                    {t("cart.continueShopping")}
                                                 </span>
                                             )}
                                         </div>
-                                        <Link to='/' className='block md:hidden text-center text-sm bg-[#673AB7] py-2.5 px-10 mt-3 rounded-full text-white font-light uppercase'>Tiến hành thanh toán</Link>
+                                            <Link to='/checkout' className='block md:hidden text-center text-sm bg-[#673AB7] py-2.5 px-10 mt-3 rounded-full text-white font-light uppercase'>{t("cart.proceedToCheckout")}</Link>
                                         <div className='relative group/icon hidden md:block'>
-                                            <Tooltip className to="/" label="Đặt hàng" tooltip="Tiến hành thanh toán" />
+                                            <Tooltip className to="/checkout" label={t("cart.proceedToCheckout")} tooltip={t("cart.proceedToCheckout")} />
                                             {/* <Link to='/' className='hidden md:block text-center text-sm bg-[#673AB7] py-2.5 px-10 rounded-full text-white font-light  md:normal-case'>Đặt hàng</Link> */}
 
                                         </div>

@@ -49,9 +49,8 @@ export const CartProvider = ({ children }) => {
       const response = await CartAPI.addToCart(payload);
       console.log('response', response);
       if (response) {
-        const responseCart = await CartAPI.getCart(userId);
-        setCart(responseCart.productList || []);
-        setCartCount(responseCart.productList.length);
+        setCart(response.cart || []);
+        setCartCount(response.cart.length);
       }
     } else {
       console.log('addToCart Local Storage');
@@ -88,6 +87,7 @@ export const CartProvider = ({ children }) => {
   // ❌ Xóa sản phẩm
   const removeFromCart = (id, variationId) => {
     setCart((prevCart) => prevCart.filter((item) => (item.id !== id || item.variationId !== variationId)));
+    setCartCount((prevCount) => prevCount - 1);
   };
 
   // 🧮 Tổng số lượng

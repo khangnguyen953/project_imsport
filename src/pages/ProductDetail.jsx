@@ -25,7 +25,7 @@ const ProductDetailPage = () => {
     window.scrollTo(0, 0);
     const fetchProduct = async () => {
       const response = await ProductAPI.getProductDetail(id)
-      console.log("response", response);
+      console.log("response ProductDetail", response?.translations);
       
       if (!response) {
         navigate("/404");
@@ -87,7 +87,7 @@ const handleRealAddToCart = (productData) => {
             />
           </div>
         </div>
-        <ProductDescriptionTabs description={product?.description} />
+        <ProductDescriptionTabs translations={product?.translations || {}} />
 
         {/* Props (giữ nguyên) */}
         <RelatedProducts
