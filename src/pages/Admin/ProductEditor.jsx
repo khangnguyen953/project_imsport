@@ -7,6 +7,7 @@ import { Link } from "react-router-dom";
 import UploadAPI from "../../service/UploadAPI";
 const IMAGE_EXTENSION = ".jpg";
 const CLOUD_FRONT_URL = "https://d1qcfqyg1kloza.cloudfront.net";
+const CLOUD_FRONT_URL_THUMBNAIL = "https://d8xkktdpkwrmf.cloudfront.net";
 export default function ProductEditor() {
   const [products, setProducts] = useState();
   const [editingId, setEditingId] = useState(null);
@@ -232,6 +233,7 @@ export default function ProductEditor() {
     }
 
     // 2. Upload tất cả thumbnail files nếu có
+    let finalImageGridUrls = [];
     let finalThumbnailUrls = formData.thumbnail || [];
     if (thumbnailFiles.length > 0) {
       try {
@@ -250,6 +252,7 @@ export default function ProductEditor() {
             },
             body: file,
           });
+          finalImageGridUrls.push(CLOUD_FRONT_URL_THUMBNAIL + "/{indexSize}x{indexSize}/resized-" + key.split(".")[0] + IMAGE_EXTENSION);
 
           return CLOUD_FRONT_URL + "/resized-" + key.split(".")[0] + IMAGE_EXTENSION;
         });
@@ -285,6 +288,7 @@ export default function ProductEditor() {
       originalPrice: formData.originalPrice ? Number(formData.originalPrice) : 0,
       thumbnail: finalThumbnailUrls.filter((t) => t && t.trim().length > 0),
       description: formData.description || "",
+      image_grid: finalImageGridUrls,
     };
     console.log("payload", payload);
     if (!payload.image || !payload.price || !payload.translations.vi.name || !payload.translations.en.name) {

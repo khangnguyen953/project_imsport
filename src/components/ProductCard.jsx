@@ -38,8 +38,10 @@ const ProductCard = ({ item, isList = false, isRelated = true }) => {
 
 
         <Link to={`/product/${item.id}`} className=''>
-          <img src={item.image} alt="collection" className='w-full h-full object-cover md:group-hover:scale-0 transition-all duration-500' />
-          <img src={item?.thumbnail?.[1] || item.image} alt="collection" className='w-full h-full object-cover absolute top-0 right-full md:group-hover:right-0 transition-all duration-500' />
+          <img src={(item.image_grid?.[0])?.replaceAll("{indexSize}", "240")} alt="collection" className='md:block hidden w-full h-full object-cover md:group-hover:scale-0 transition-all duration-500' />
+          <img src={item?.image_grid?.[1]?.replaceAll("{indexSize}", "240") || item.image} alt="collection" className='md:block hidden w-full h-full object-cover absolute top-0 right-full md:group-hover:right-0 transition-all duration-500' />
+          <img src={(item.image_grid?.[0])?.replaceAll("{indexSize}", "150")} alt="collection" className='block md:hidden w-full h-full object-cover md:group-hover:scale-0 transition-all duration-500' />
+          <img src={item?.image_grid?.[1]?.replaceAll("{indexSize}", "150") || item.image} alt="collection" className='block md:hidden w-full h-full object-cover absolute top-0 right-full md:group-hover:right-0 transition-all duration-500' />
         </Link>
       </div>
       <div className='px-4 pb-5 md:text-end text-center'>

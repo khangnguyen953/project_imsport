@@ -100,7 +100,7 @@ const CollectionProduct = () => {
                 ]);
                 setProducts(
                     products.filter(item =>
-                        categories.some(c => c.id === item.category_id)
+                        categories.some(c => c.categories_type_id === 1 && c.id === item.category_id)
                     ).slice(0, 6)
                 );
             } catch (error) {
