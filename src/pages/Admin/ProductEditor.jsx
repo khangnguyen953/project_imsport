@@ -4,12 +4,20 @@ import { product2 as initialProducts } from "../../data/product2";
 import ProductAPI from "../../service/ProductAPI";
 import CategoryAPI from "../../service/CategoriesAPI";
 import { Link } from "react-router-dom";
-
+import UploadAPI from "../../service/UploadAPI";
+const IMAGE_EXTENSION = ".jpg";
+const CLOUD_FRONT_URL = "https://d1qcfqyg1kloza.cloudfront.net";
 export default function ProductEditor() {
   const [products, setProducts] = useState();
   const [editingId, setEditingId] = useState(null);
   const [formMode, setFormMode] = useState("add"); // "add" | "edit"
   const [categories, setCategories] = useState([]);
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState("");
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [thumbnailFiles, setThumbnailFiles] = useState([]); // Mảng các File object
+  const [thumbnailPreviews, setThumbnailPreviews] = useState([]); // Mảng các URL preview
+  const [isUploadingThumbnails, setIsUploadingThumbnails] = useState(false);
   useEffect(() => {
     const fetchData = async () => {
       const [categoriesResponse, productsResponse] = await Promise.all([
@@ -54,6 +62,10 @@ export default function ProductEditor() {
     setFormData(emptyProduct);
     setEditingId(null);
     setFormMode("add");
+    setImageFile(null);
+    setImagePreview("");
+    setThumbnailFiles([]);
+    setThumbnailPreviews([]);
   };
 
   const handleEdit = (product) => {
@@ -85,6 +97,26 @@ export default function ProductEditor() {
         }
       }
     });
+    setImageFile(null);
+    setImagePreview(product.image || "");
+    setThumbnailFiles([]);
+    setThumbnailPreviews([]); // Chỉ lưu preview cho file mới, URL cũ sẽ hiển thị từ formData.thumbnail
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files && e.target.files[0] ? e.target.files[0] : null;
+    if (!file) {
+      setImageFile(null);
+      setImagePreview("");
+      return;
+    }
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+    // Xoá URL cũ để chắc chắn dùng URL mới sau khi upload
+    setFormData((prev) => ({
+      ...prev,
+      image: "",
+    }));
   };
 
   const handleDelete = (id) => {
@@ -159,15 +191,99 @@ export default function ProductEditor() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     console.log("formData", formData);
+
+    // 1. Nếu người dùng đã chọn file ảnh, gọi Lambda để lấy presigned URL và upload ảnh
+    let finalImageUrl = formData.image;
+    if (imageFile) {
+      try {
+        setIsUploadingImage(true);
+        // Gửi thông tin file lên Lambda/API để lấy presigned URL
+        const { uploadUrl, fileUrl, key } = await UploadAPI.getPresignedUrl(
+          imageFile.name,
+          imageFile.type
+        );
+        console.log("uploadUrl", uploadUrl);
+        console.log("fileUrl", fileUrl);
+        console.log("key", key);
+        // Upload file trực tiếp lên S3 bằng presigned URL
+        await fetch(uploadUrl, {
+          method: "PUT",
+          headers: {
+            "Content-Type": imageFile.type,
+          },
+          body: imageFile,
+        });
+
+        finalImageUrl = CLOUD_FRONT_URL + "/resized-" + key.split(".")[0] + IMAGE_EXTENSION;
+        console.log("finalImageUrl", finalImageUrl);
+      } catch (error) {
+        console.error("Upload image error", error);
+        Swal.fire({
+          title: "Lỗi",
+          text: "Upload ảnh thất bại, vui lòng thử lại",
+          icon: "error",
+          confirmButtonText: "OK",
+        });
+        setIsUploadingImage(false);
+        return;
+      } finally {
+        setIsUploadingImage(false);
+      }
+    }
+
+    // 2. Upload tất cả thumbnail files nếu có
+    let finalThumbnailUrls = formData.thumbnail || [];
+    if (thumbnailFiles.length > 0) {
+      try {
+        setIsUploadingThumbnails(true);
+        const uploadPromises = thumbnailFiles.map(async (file) => {
+          const { uploadUrl, fileUrl, key } = await UploadAPI.getPresignedUrl(
+            file.name,
+            file.type
+          );
+          
+          // Upload file trực tiếp lên S3
+          await fetch(uploadUrl, {
+            method: "PUT",
+            headers: {
+              "Content-Type": file.type,
+            },
+            body: file,
+          });
+
+          return CLOUD_FRONT_URL + "/resized-" + key.split(".")[0] + IMAGE_EXTENSION;
+        });
+
+        const uploadedUrls = await Promise.all(uploadPromises);
+        
+        // Kết hợp với các URL thumbnail cũ (nếu có) và các URL mới
+        const existingUrls = finalThumbnailUrls.filter(url => url && url.trim().length > 0);
+        finalThumbnailUrls = [...existingUrls, ...uploadedUrls];
+        
+        console.log("finalThumbnailUrls", finalThumbnailUrls);
+      } catch (error) {
+        console.error("Upload thumbnails error", error);
+        Swal.fire({
+          title: "Lỗi",
+          text: "Upload thumbnail thất bại, vui lòng thử lại",
+          icon: "error",
+          confirmButtonText: "OK",
+        });
+        setIsUploadingThumbnails(false);
+        return;
+      } finally {
+        setIsUploadingThumbnails(false);
+      }
+    }
+
     const payload = {
       ...formData,
+      image: finalImageUrl,
       // id: Number(formData.id),
       category_id: Number(formData.category_id),
       price: Number(formData.price),
       originalPrice: formData.originalPrice ? Number(formData.originalPrice) : 0,
-      thumbnail: (formData.thumbnail || [])
-        .map((t) => t.trim())
-        .filter((t) => t.length > 0),
+      thumbnail: finalThumbnailUrls.filter((t) => t && t.trim().length > 0),
       description: formData.description || "",
     };
     console.log("payload", payload);
@@ -187,6 +303,7 @@ export default function ProductEditor() {
             quantity: Number(v.quantity),
           })),
           thumbnail: payload.thumbnail,
+          image: imagePreview,
           // description: payload.description,
           // translations: {
           //   vi: {
@@ -226,6 +343,7 @@ export default function ProductEditor() {
                 })),
                 thumbnail: payload.thumbnail,
                 description: payload.description,
+                image: imagePreview,
               }
             : p
         )
@@ -295,10 +413,39 @@ export default function ProductEditor() {
     }));
   };
 
-  const handleThumbnailChange = (index, value) => {
+  const handleThumbnailChange = (index, file) => {
+    if (!file) return;
+    
+    const newFiles = [...thumbnailFiles];
+    const newPreviews = [...thumbnailPreviews];
+    
+    // Nếu đang thay thế file tại index này
+    if (index < newFiles.length) {
+      newFiles[index] = file;
+      // Tạo preview mới
+      const previewUrl = URL.createObjectURL(file);
+      // Revoke URL cũ nếu có
+      if (newPreviews[index] && newPreviews[index].startsWith('blob:')) {
+        URL.revokeObjectURL(newPreviews[index]);
+      }
+      newPreviews[index] = previewUrl;
+    } else {
+      // Thêm file mới
+      newFiles.push(file);
+      newPreviews.push(URL.createObjectURL(file));
+    }
+    
+    setThumbnailFiles(newFiles);
+    setThumbnailPreviews(newPreviews);
+    
+    // Xoá URL cũ trong formData nếu có
     setFormData((prev) => {
       const next = [...(prev.thumbnail || [])];
-      next[index] = value;
+      if (index < next.length) {
+        next[index] = "";
+      } else {
+        next.push("");
+      }
       return {
         ...prev,
         thumbnail: next,
@@ -307,13 +454,62 @@ export default function ProductEditor() {
   };
 
   const handleAddThumbnail = () => {
-    setFormData((prev) => ({
-      ...prev,
-      thumbnail: [...(prev.thumbnail || []), ""],
-    }));
+    // Tạo một input file ẩn để trigger với multiple
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.multiple = true;
+    input.onchange = (e) => {
+      const files = Array.from(e.target.files || []);
+      if (files.length > 0) {
+        handleMultipleThumbnailsChange(files);
+      }
+    };
+    input.click();
+  };
+
+  const handleMultipleThumbnailsChange = (files) => {
+    if (!files || files.length === 0) return;
+    
+    const newFiles = [...thumbnailFiles];
+    const newPreviews = [...thumbnailPreviews];
+    
+    // Thêm tất cả các file mới vào mảng
+    files.forEach((file) => {
+      newFiles.push(file);
+      newPreviews.push(URL.createObjectURL(file));
+    });
+    
+    setThumbnailFiles(newFiles);
+    setThumbnailPreviews(newPreviews);
+    
+    // Cập nhật formData với các placeholder rỗng
+    setFormData((prev) => {
+      const next = [...(prev.thumbnail || [])];
+      files.forEach(() => {
+        next.push("");
+      });
+      return {
+        ...prev,
+        thumbnail: next,
+      };
+    });
   };
 
   const handleRemoveThumbnail = (index) => {
+    // Revoke preview URL nếu là blob URL
+    if (thumbnailPreviews[index] && thumbnailPreviews[index].startsWith('blob:')) {
+      URL.revokeObjectURL(thumbnailPreviews[index]);
+    }
+    
+    // Xoá file và preview
+    const newFiles = thumbnailFiles.filter((_, i) => i !== index);
+    const newPreviews = thumbnailPreviews.filter((_, i) => i !== index);
+    
+    setThumbnailFiles(newFiles);
+    setThumbnailPreviews(newPreviews);
+    
+    // Xoá URL trong formData
     setFormData((prev) => ({
       ...prev,
       thumbnail: (prev.thumbnail || []).filter((_, i) => i !== index),
@@ -608,22 +804,20 @@ export default function ProductEditor() {
 
               <div>
                 <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
-                  Link ảnh chính
+                  Ảnh sản phẩm (upload)
                 </label>
                 <input
-                  type="text"
-                  name="image"
-                  value={formData.image}
-                  onChange={handleChange}
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-800 focus:border-blue-400 focus:outline-none"
-                  placeholder="https://..."
-                  required
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="block w-full text-sm text-slate-800 file:mr-4 file:rounded-2xl file:border-0 file:bg-slate-900 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-slate-800"
+                  required={formMode === "add"}
                 />
-                {formData.image && (
+                {(imagePreview || formData.image) && (
                   <img
-                    src={formData.image}
+                    src={imagePreview || formData.image}
                     alt="Preview"
-                    className="mt-2 h-28 w-full rounded-2xl object-cover"
+                    className="mt-2  w-60 h-60 self-center rounded-2xl object-cover"
                   />
                 )}
               </div>
@@ -632,7 +826,7 @@ export default function ProductEditor() {
               <div className="mt-4 rounded-2xl border border-slate-100 bg-slate-50 p-4">
                 <div className="mb-3 flex items-center justify-between">
                   <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                    Danh sách thumbnail
+                    Danh sách thumbnail (upload)
                   </h3>
                   <button
                     type="button"
@@ -640,35 +834,63 @@ export default function ProductEditor() {
                     className="inline-flex items-center gap-1 rounded-2xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:border-blue-200 hover:text-blue-600"
                   >
                     <Plus size={14} />
-                    Thêm thumbnail
+                    Thêm thumbnail (nhiều file)
                   </button>
                 </div>
 
-                {(!formData.thumbnail || formData.thumbnail.length === 0) && (
-                  <p className="text-xs text-slate-400">
-                    Chưa có thumbnail nào. Nhấn &quot;Thêm thumbnail&quot; để tạo.
+                {(thumbnailFiles.length === 0 && (!formData.thumbnail || formData.thumbnail.length === 0)) && (
+                  <p className="text-xs text-slate-400 mb-3">
+                    Chưa có thumbnail nào. Nhấn &quot;Thêm thumbnail&quot; để chọn nhiều file cùng lúc.
                   </p>
                 )}
 
+                {/* Input để chọn nhiều file cùng lúc - luôn hiển thị để có thể thêm file mới */}
+                <div className="mb-3">
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    onChange={(e) => {
+                      const files = Array.from(e.target.files || []);
+                      if (files.length > 0) {
+                        handleMultipleThumbnailsChange(files);
+                        // Reset input để có thể chọn lại cùng file
+                        e.target.value = '';
+                      }
+                    }}
+                    className="block w-full text-sm text-slate-800 file:mr-4 file:rounded-2xl file:border-0 file:bg-slate-900 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-slate-800"
+                  />
+                </div>
+
                 <div className="space-y-3">
-                  {formData.thumbnail?.map((thumb, index) => (
+                  {/* Hiển thị các thumbnail đã upload (file mới) */}
+                  {thumbnailFiles.map((file, index) => (
                     <div
-                      key={index}
-                      className="flex items-center gap-2 rounded-2xl bg-white p-3"
+                      key={`file-${index}`}
+                      className="flex items-start gap-2 rounded-2xl bg-white p-3"
                     >
                       <div className="flex-1">
                         <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-                          Thumbnail {index + 1}
+                          Thumbnail mới {index + 1} - {file.name}
                         </label>
                         <input
-                          type="text"
-                          value={thumb}
-                          onChange={(e) =>
-                            handleThumbnailChange(index, e.target.value)
-                          }
-                          className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-800 focus:border-blue-400 focus:outline-none"
-                          placeholder="https://..."
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => {
+                            const newFile = e.target.files?.[0];
+                            if (newFile) {
+                              handleThumbnailChange(index, newFile);
+                            }
+                          }}
+                          className="block w-full text-sm text-slate-800 file:mr-4 file:rounded-2xl file:border-0 file:bg-slate-900 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-slate-800"
                         />
+                        {thumbnailPreviews[index] && (
+                          <img
+                            src={thumbnailPreviews[index]}
+                            alt={`Thumbnail ${index + 1} preview`}
+                            className="mt-2 w-32 h-32 rounded-2xl object-cover"
+                          />
+                        )}
                       </div>
                       <button
                         type="button"
@@ -679,6 +901,44 @@ export default function ProductEditor() {
                       </button>
                     </div>
                   ))}
+                  
+                  {/* Hiển thị các thumbnail URL cũ (nếu đang edit và có URL cũ) */}
+                  {formData.thumbnail?.map((thumb, index) => {
+                    // Chỉ hiển thị URL cũ nếu URL không rỗng
+                    if (thumb && thumb.trim().length > 0) {
+                      return (
+                        <div
+                          key={`url-${index}`}
+                          className="flex items-start gap-2 rounded-2xl bg-white p-3"
+                        >
+                          <div className="flex-1">
+                            <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                              Thumbnail hiện tại {index + 1}
+                            </label>
+                            <div className="text-xs text-slate-600 mb-2 break-all line-clamp-2">{thumb}</div>
+                            <img
+                              src={thumb}
+                              alt={`Thumbnail ${index + 1}`}
+                              className="w-32 h-32 rounded-2xl object-cover"
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setFormData((prev) => ({
+                                ...prev,
+                                thumbnail: (prev.thumbnail || []).filter((_, i) => i !== index),
+                              }));
+                            }}
+                            className="mt-5 inline-flex items-center justify-center rounded-2xl border border-rose-100 bg-rose-50 px-2.5 py-2 text-xs text-rose-500 hover:border-rose-200 hover:bg-rose-100"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })}
                 </div>
               </div>
 
