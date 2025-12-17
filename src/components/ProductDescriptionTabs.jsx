@@ -47,63 +47,100 @@ const detailDescriptionHTML = `
 `;
 
 const ComponentContent = ({ data }) => {
-  const keys = Object.keys(data);
+  const { t, i18n } = useTranslation();
+  const language = i18n.language;
   return (
     <div className="overflow-x-auto">
       <table className="min-w-full divide-y divide-gray-200">
         <tbody>
-          {keys.map((key, index) => (
-            <tr
-              key={key}
-              className={`${
-                index % 2 === 0 ? "bg-[#f5f5f5]" : "bg-white"
-              } border-b border-gray-200 last:border-b-0`}
+        <tr
+              className="bg-[#f5f5f5] border-b border-gray-200 last:border-b-0"
             >
               <td className="px-6 py-4 font-medium w-2/4 text-gray-700 border-r border-gray-200">
-                {key}
+                Tên sản phẩm
               </td>
               <td className="px-6 py-4 whitespace-pre-wrap w-2/3 text-gray-900">
-                {Array.isArray(data[key]) ? (
                   <ul className="list-none space-y-1">
-                    {data[key].map((item, itemIndex) => (
-                      <li key={itemIndex} className="text-sm flex items-start">
+                      <li className="text-sm flex items-start">
+                        <span className="mr-2 text-lg leading-none">•</span>
+                        {data.translations[language]?.name}
+                      </li>
+                  </ul>
+              </td>
+            </tr>
+            <tr
+              className="bg-white border-b border-gray-200 last:border-b-0"
+            >
+              <td className="px-6 py-4 font-medium w-2/4 text-gray-700 border-r border-gray-200">
+                Thương hiệu
+              </td>
+              <td className="px-6 py-4 whitespace-pre-wrap w-2/3 text-gray-900">
+                  <ul className="list-none space-y-1">
+                      <li className="text-sm flex items-start">
+                        <span className="mr-2 text-lg leading-none">•</span>
+                        {data.brand}
+                      </li>
+                  </ul>
+              </td>
+            </tr>
+            <tr
+              className="bg-[#f5f5f5] border-b border-gray-200 last:border-b-0"
+            >
+              <td className="px-6 py-4 font-medium w-2/4 text-gray-700 border-r border-gray-200">
+                Kích cỡ
+              </td>
+              <td className="px-6 py-4 whitespace-pre-wrap w-2/3 text-gray-900">
+                  <ul className="list-none space-y-1">
+                    {data.variations.map((variation) => (
+                      <li key={variation.id} className="text-sm flex items-start">
+                        <span className="mr-2 text-lg leading-none">•</span>
+                        {variation.size}
+                      </li>
+                    ))}
+                  </ul>
+              </td>
+            </tr>
+            <tr
+              className="bg-white border-b border-gray-200 last:border-b-0"
+            >
+              <td className="px-6 py-4 font-medium w-2/4 text-gray-700 border-r border-gray-200">
+                Đặc điểm
+              </td>
+              <td className="px-6 py-4 whitespace-pre-wrap w-2/3 text-gray-900">
+                  <ul className="list-none space-y-1">
+                    {data.translations[language]?.highlights?.split("\n").map((item, i) => (
+                      <li key={i} className="text-sm flex items-start">
                         <span className="mr-2 text-lg leading-none">•</span>
                         {item}
                       </li>
                     ))}
                   </ul>
-                ) : (
-                  <span className="text-sm">{data[key]}</span>
-                )}
               </td>
             </tr>
-          ))}
         </tbody>
       </table>
     </div>
   );
 };
 
-const ProductDescriptionTabs = ({ translations }) => {
+const ProductDescriptionTabs = ({ product }) => {
   const { t, i18n } = useTranslation();
   const language = i18n.language;
   // Sử dụng key tab thay vì text dịch trực tiếp, tránh lỗi khi đổi ngôn ngữ
   const [activeTab, setActiveTab] = useState("description");
   const tabs = ["description", "ingredients"];
-  console.log(translations[language]?.description);
 
   const renderContent = (tab) => {
-    console.log(translations[language]);
     switch (tab) {
       case "description":
         return (
           <div
             className="prose max-w-none text-gray-700"
-            dangerouslySetInnerHTML={{ __html: translations[language]?.description}}
+            dangerouslySetInnerHTML={{ __html: product?.translations[language]?.description}}
           />
         );
       case "ingredients":
-        return <ComponentContent data={componentData} />;
+        return <ComponentContent data={product} />;
       default:
         return null;
     }
@@ -133,7 +170,7 @@ const ProductDescriptionTabs = ({ translations }) => {
         <div className="border border-gray-300 rounded-b">
           {activeTab === "description" ? (
             <div className="p-4 md:px-5 md:py-10">
-              <div className="border border-gray-300">
+              <div className="">
                 {renderContent(activeTab)}
               </div>
             </div>

@@ -46,7 +46,7 @@ const ProductCard = ({ item, isList = false, isRelated = true }) => {
         <Link to={`/product/${item.id}`} className='line-clamp-2 font-semibold text-base text-center' title={item.translations[language].name}>{item.translations[language].name}</Link>
         <div className='my-1 text-center md:mr-3 '>
           <p className='text-[15px] font-bold  text-[#ff8c00] '>{formatPrice(Number(item.price))}</p>
-          {item.originalPrice != item.price && <p className='text-sm font-normal  text-[#adadad] line-through '>{formatPrice(Number(item.originalPrice))}</p>}
+          {item.originalPrice != 0 && <p className='text-sm font-normal  text-[#adadad] line-through '>{formatPrice(Number(item.originalPrice))}</p>}
         </div>
         {!isList && (
           <button onClick={() => quickView(item.id)} className='md:block hidden w-full text-sm font-normal text-center text-[#333333] hover:text-[#673AB7] my-1'>Thêm vào giỏ hàng</button>

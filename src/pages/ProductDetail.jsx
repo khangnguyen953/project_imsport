@@ -82,12 +82,12 @@ const handleRealAddToCart = (productData) => {
             <ProductInfo
               product={product}
               variations={product?.variations || []}
-              highlights={highlights}
+              translations={product?.translations || {}}
               onAddToCart={handleRealAddToCart}
             />
           </div>
         </div>
-        <ProductDescriptionTabs translations={product?.translations || {}} />
+        <ProductDescriptionTabs product={product} />
 
         {/* Props (giữ nguyên) */}
         <RelatedProducts

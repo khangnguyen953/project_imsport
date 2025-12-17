@@ -16,6 +16,7 @@ import CheckoutPreview from "./pages/CheckoutPreview";
 import ChatbotPage from "./pages/ChatBotDemo";
 import Dashboard from "./pages/Admin/Dashboard";
 import ProductEditor from "./pages/Admin/ProductEditor";
+import CategoryManager from "./pages/Admin/CategoryManager";
 import "./i18next/i18next";
 import { I18nextProvider } from "react-i18next";
 import i18n from "./i18next/i18next";
@@ -53,6 +54,7 @@ function App() {
           <Route path="/admin">
             <Route index element={<Dashboard />} />
             <Route path="products" element={<ProductEditor />} />
+            <Route path="categories" element={<CategoryManager />} />
           </Route>
         </Routes>
       </Router>

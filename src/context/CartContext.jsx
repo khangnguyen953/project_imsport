@@ -15,7 +15,6 @@ export const CartProvider = ({ children }) => {
 
       if (userId) {
         const response = await CartAPI.getCart(userId);
-        console.log('response', response);
 
         setCart(response.productList || []);
         setCartCount(response.productList.length);
@@ -37,7 +36,6 @@ export const CartProvider = ({ children }) => {
 
   // 🛒 Thêm sản phẩm
   const addToCart = async (product) => {
-    console.log('product', product);
     if (userId) {
       const payload = {
         user_id: userId,

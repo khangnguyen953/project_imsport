@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { Plus, Pencil, Trash2, Save, X } from "lucide-react";
+import { Plus, Pencil, Trash2, Save, X, ArrowLeft } from "lucide-react";
 import { product2 as initialProducts } from "../../data/product2";
 import ProductAPI from "../../service/ProductAPI";
 import CategoryAPI from "../../service/CategoriesAPI";
+import { Link } from "react-router-dom";
 
 export default function ProductEditor() {
-  const [products, setProducts] = useState(initialProducts);
+  const [products, setProducts] = useState();
   const [editingId, setEditingId] = useState(null);
   const [formMode, setFormMode] = useState("add"); // "add" | "edit"
   const [categories, setCategories] = useState([]);
@@ -15,14 +16,14 @@ export default function ProductEditor() {
         CategoryAPI.getCategory(),
         ProductAPI.getProducts()
       ])
-      setCategories(categoriesResponse)
+      setCategories(categoriesResponse.sort((a, b) => a.id - b.id))
       setProducts(productsResponse)
     }
     fetchData()
   }, [])
 
   const emptyProduct = {
-    category_id: "",
+    category_id: categories[0]?.id || 1,
     name: "",
     image: "",
     price: "",
@@ -33,6 +34,18 @@ export default function ProductEditor() {
     variations: [],
     thumbnail: [""],
     description: "",
+    translations: {
+      vi: {
+        name: "",
+        description: "",
+        highlights: "",
+      },
+      en: {
+        name: "",
+        description: "",
+        highlights: "",
+      }
+    }
   };
 
   const [formData, setFormData] = useState(emptyProduct);
@@ -59,13 +72,49 @@ export default function ProductEditor() {
       variations: product.variations || [],
       thumbnail: product.thumbnail && product.thumbnail.length ? product.thumbnail : [""],
       description: product.description || "",
+      translations: {
+        vi: {
+          name: product.translations.vi.name,
+          description: product.translations.vi.description,
+          highlights: product.translations.vi.highlights,
+        },
+        en: {
+          name: product.translations.en.name,
+          description: product.translations.en.description,
+          highlights: product.translations.en.highlights,
+        }
+      }
     });
   };
 
   const handleDelete = (id) => {
-    if (!window.confirm("Bạn có chắc muốn xoá sản phẩm này?")) return;
-    setProducts((prev) => prev.filter((p) => p.id !== id));
-    if (editingId === id) resetForm();
+    Swal.fire({
+      title: "Bạn có chắc muốn xoá sản phẩm này?",
+      text: "Bạn sẽ không thể khôi phục lại sau khi xoá!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Có",
+      cancelButtonText: "Không",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        await ProductAPI.deleteProduct(id);
+        setProducts((prev) => prev.filter((p) => p.id !== id));
+        if (editingId === id) resetForm();
+      }
+      Swal.fire({
+        title: "Thành công",
+        text: "Sản phẩm đã được xoá",
+        icon: "success",
+        confirmButtonText: "OK",
+      });
+    }).catch(err => {
+      Swal.fire({
+        title: "Lỗi",
+        text: "Xoá sản phẩm thất bại",
+        icon: "error",
+        confirmButtonText: "OK",
+      });
+    });
   };
 
   const handleChange = (e) => {
@@ -76,9 +125,40 @@ export default function ProductEditor() {
     }));
   };
 
+  const handleChangeVi = (e) => {
+    const { name, value } = e.target;
+  
+    setFormData(prev => ({
+      ...prev,
+      translations: {
+        ...prev.translations,
+        vi: {
+          ...prev.translations.vi,
+          [name]: value,
+        },
+
+      },
+    }));
+  };
+  const handleChangeEn = (e) => {
+    const { name, value } = e.target;
+  
+    setFormData(prev => ({
+      ...prev,
+      translations: {
+        ...prev.translations,
+        en: {
+          ...prev.translations.en,
+          [name]: value,
+        },
+
+      },
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    console.log("formData", formData);
     const payload = {
       ...formData,
       // id: Number(formData.id),
@@ -90,8 +170,8 @@ export default function ProductEditor() {
         .filter((t) => t.length > 0),
       description: formData.description || "",
     };
-
-    if (!payload.name || !payload.image || !payload.price) {
+    console.log("payload", payload);
+    if (!payload.image || !payload.price || !payload.translations.vi.name || !payload.translations.en.name) {
       alert("Vui lòng nhập ít nhất tên, ảnh và giá");
       return;
     }
@@ -107,13 +187,31 @@ export default function ProductEditor() {
             quantity: Number(v.quantity),
           })),
           thumbnail: payload.thumbnail,
-          description: payload.description,
+          // description: payload.description,
+          // translations: {
+          //   vi: {
+          //     name: formData.name,
+          //     description: formData.description || "",
+          //   },
+          //   en: {
+          //     name: formData.name_en || "",
+          //     description: formData.description_en || "",
+          //   }
+          // }
         },
       ]);
+      payload.id = Math.max(...products.map(p => p.id)) + 1;
       payload.createdAt = new Date().toISOString();
       payload.updatedAt = new Date().toISOString();
+      console.log("createProduct payload", payload);
       const response = await ProductAPI.createProduct(payload);
       console.log("createProduct response", response);
+      Swal.fire({
+        title: "Thành công",
+        text: "Sản phẩm đã được tạo",
+        icon: "success",
+        confirmButtonText: "OK",
+      });
     } else {
       setProducts((prev) =>
         prev.map((p) =>
@@ -137,6 +235,12 @@ export default function ProductEditor() {
       console.log("updateProduct payload", payload);
       const response = await ProductAPI.updateProduct(editingId, payload);
       console.log("updateProduct response", response);
+      Swal.fire({
+        title: "Thành công",
+        text: "Sản phẩm đã được cập nhật",
+        icon: "success",
+        confirmButtonText: "OK",
+      });
     }
     resetForm();
   };
@@ -221,14 +325,21 @@ export default function ProductEditor() {
     <div className="min-h-screen bg-[#f8fafc] px-6 py-10 text-slate-900">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-8">
         {/* Header */}
+        <Link
+              to="/admin"
+              className="flex w-fit items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-600 shadow-sm transition hover:border-slate-300 hover:text-slate-900"
+            >
+              <ArrowLeft size={18} />
+              Quay về 
+            </Link>
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <p className="text-sm uppercase tracking-[0.3em] text-slate-500">Product editor</p>
-            <h1 className="mt-2 text-3xl font-bold text-slate-900">Thêm / sửa sản phẩm</h1>
-            <p className="mt-2 text-slate-500">
-              Trang nội bộ cho phép bạn chỉnh sửa nhanh thông tin sản phẩm dựa trên dữ liệu trong file
-              <span className="font-semibold"> product2.js</span>.
-            </p>
+           
+          <div className="flex items-center gap-3">
+           
+            <div>
+              <p className="text-sm uppercase tracking-[0.3em] text-slate-500">Product editor</p>
+              <h1 className="mt-2 text-3xl font-bold text-slate-900">Thêm / sửa sản phẩm</h1>
+            </div>
           </div>
           <button
             type="button"
@@ -250,26 +361,26 @@ export default function ProductEditor() {
               <div className="col-span-2 text-right">Thao tác</div>
             </div>
             <div className="divide-y divide-slate-100 max-h-[520px] overflow-y-auto">
-              {products.map((product) => (
+              {products?.map((product, index) => (
                 <div
-                  key={product.id}
+                  key={index}
                   className="grid grid-cols-12 items-center px-6 py-4 text-sm text-slate-600 transition hover:bg-slate-50"
                 >
                   <div className="col-span-5 flex items-center gap-3">
                     <img
                       src={product.image}
-                      alt={product.name}
+                      alt={product.translations.vi.name}
                       className="h-12 w-12 rounded-2xl object-cover"
                     />
                     <div>
-                      <p className="font-semibold text-slate-900 line-clamp-2">{product.name}</p>
+                      <p className="font-semibold text-slate-900 line-clamp-2">{product.translations.vi.name}</p>
                       <p className="text-xs text-slate-400">ID: {product.id}</p>
                     </div>
                   </div>
                   <div className="col-span-3 font-semibold text-slate-900">
                     {formatPrice(product.price)}
                   </div>
-                  <div className="col-span-2 text-sm text-slate-500">{product.category_id}</div>
+                  <div className="col-span-2 text-sm text-slate-500">{categories.find(category => category.id === product.category_id)?.name}</div>
                   <div className="col-span-2 flex justify-end gap-2">
                     <button
                       type="button"
@@ -288,7 +399,7 @@ export default function ProductEditor() {
                   </div>
                 </div>
               ))}
-              {products.length === 0 && (
+              {products?.length === 0 && (
                 <div className="px-6 py-8 text-center text-sm text-slate-500">
                   Chưa có sản phẩm nào.
                 </div>
@@ -465,19 +576,34 @@ export default function ProductEditor() {
                 </div>
               </div>
 
-              <div>
-                <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
-                  Tên sản phẩm
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-800 focus:border-blue-400 focus:outline-none"
-                  placeholder="Nhập tên sản phẩm"
-                  required
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    Tên sản phẩm (VI)
+                  </label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={formData.translations.vi.name}
+                    onChange={handleChangeVi}
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-800 focus:border-blue-400 focus:outline-none"
+                    placeholder="Nhập tên sản phẩm (tiếng Việt)"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    Product name (EN)
+                  </label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={formData.translations.en.name}
+                    onChange={handleChangeEn}
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-800 focus:border-blue-400 focus:outline-none"
+                    placeholder="Enter product name (English)"
+                  />
+                </div>
               </div>
 
               <div>
@@ -589,6 +715,35 @@ export default function ProductEditor() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    Đặc điểm nổi bật (VI)
+                  </label>
+                  <textarea
+                    name="highlights"
+                    value={formData.translations.vi.highlights}
+                    onChange={handleChangeVi}
+                    rows={6}
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-800 focus:border-blue-400 focus:outline-none font-mono"
+                    placeholder=""
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    Đặc điểm nổi bật (EN)
+                  </label>
+                  <textarea
+                    name="highlights"
+                    value={formData.translations.en.highlights}
+                    onChange={handleChangeEn}
+                    rows={6}
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-800 focus:border-blue-400 focus:outline-none font-mono"
+                    placeholder=""
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
                     Thương hiệu
                   </label>
                   <input
@@ -623,26 +778,37 @@ export default function ProductEditor() {
                   </label>
                 </div>
               </div>
-              {/* Description */}
-              <div>
-                <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
-                  Mô tả (HTML)
-                </label>
-                <textarea
-                  name="description"
-                  value={formData.description}
-                  onChange={handleChange}
-                  rows={6}
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-800 focus:border-blue-400 focus:outline-none font-mono"
-                  placeholder="<div>...</div>"
-                />
+              {/* Description (VI / EN) */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    Mô tả (HTML - VI)
+                  </label>
+                  <textarea
+                    name="description"
+                    value={formData.translations.vi.description}
+                    onChange={handleChangeVi}
+                    rows={6}
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-800 focus:border-blue-400 focus:outline-none font-mono"
+                    placeholder="<div>...</div>"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    Description (HTML - EN)
+                  </label>
+                  <textarea
+                    name="description"
+                    value={formData.translations.en.description}
+                    onChange={handleChangeEn}
+                    rows={6}
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-800 focus:border-blue-400 focus:outline-none font-mono"
+                    placeholder="<div>...</div>"
+                  />
+                </div>
               </div>
 
               <div className="mt-6 flex items-center justify-between gap-3">
-                <p className="text-xs text-slate-400">
-                  Lưu ý: Trang này chỉ cập nhật dữ liệu trên giao diện. Để lưu vĩnh viễn, bạn cần copy dữ
-                  liệu sinh ra và chỉnh lại trong file <span className="font-semibold">product2.js</span>.
-                </p>
                 <button
                   type="submit"
                   className="inline-flex items-center gap-2 rounded-2xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition hover:bg-slate-800"

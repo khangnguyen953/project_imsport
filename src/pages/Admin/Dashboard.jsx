@@ -9,10 +9,13 @@ import {
   AlertTriangle,
   Sparkles,
   Filter,
+  LayoutDashboard,
+  FolderTree,
 } from "lucide-react";
 import ProductAPI from "../../service/ProductAPI";
 import CategoryAPI from "../../service/CategoriesAPI";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
+
 
 const summaryCards = [
   {
@@ -48,6 +51,7 @@ const summaryCards = [
 
 
 export default function Dashboard() {
+    const location = useLocation();
     const [products, setProducts] = useState([])
     const [categories, setCategories] = useState([])
     useEffect(() => {
@@ -95,55 +99,93 @@ export default function Dashboard() {
         }
       });
     }
+  const menuItems = [
+    {
+      label: "Tổng quan",
+      path: "/admin",
+      icon: LayoutDashboard,
+    },
+    {
+      label: "Quản lí sản phẩm",
+      path: "/admin/products",
+      icon: Package,
+    },
+    {
+      label: "Quản lí category",
+      path: "/admin/categories",
+      icon: FolderTree,
+    },
+  ];
+
   return (
-    <div className="min-h-screen bg-[#f8fafc] px-6 py-10 text-slate-900">
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-8">
+    <div className="min-h-screen bg-[#f8fafc] text-slate-900">
+      <div className="flex">
+        {/* Sidebar */}
+        <aside className="fixed left-0 top-0 h-screen w-64 border-r border-slate-200 bg-white shadow-lg">
+          <div className="flex h-full flex-col">
+            {/* Logo/Header */}
+            <div className="border-b border-slate-200 p-6">
+              <Link to="/admin" className="flex items-center gap-3">
+                <div className="rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 p-2">
+                  <LayoutDashboard size={24} className="text-white" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-slate-900">Admin Panel</h2>
+                  <p className="text-xs text-slate-500">Quản trị hệ thống</p>
+                </div>
+              </Link>
+            </div>
+
+            {/* Navigation */}
+            <nav className="flex-1 space-y-1 p-4">
+              {menuItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = location.pathname === item.path;
+                return (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all ${
+                      isActive
+                        ? "bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-lg"
+                        : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                    }`}
+                  >
+                    <Icon size={20} />
+                    <span>{item.label}</span>
+                  </Link>
+                );
+              })}
+            </nav>
+
+            {/* Footer */}
+            <div className="border-t border-slate-200 p-4">
+              <Link
+                to="/"
+                className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-slate-600 transition-all hover:bg-slate-100 hover:text-slate-900"
+              >
+                <span>← Quay về trang chủ</span>
+              </Link>
+            </div>
+          </div>
+        </aside>
+
+        {/* Main Content */}
+        <div className="ml-64 flex-1 px-6 py-10">
+          <div className="mx-auto flex w-full max-w-7xl flex-col gap-8">
         {/* Header */}
         <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
           <div>
             <p className="text-sm uppercase tracking-[0.3em] text-slate-500">Control center</p>
             <h1 className="mt-2 text-4xl font-bold text-slate-900">Quản lí sản phẩm</h1>
-            <p className="mt-3 text-slate-500">
-              Nắm bắt tình trạng tồn kho, doanh thu và kiểm duyệt sản phẩm trong một bảng điều khiển
-              trực quan.
-            </p>
+            
           </div>
 
-          <div className="flex flex-wrap gap-3">
-            <button className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-600 shadow-sm transition hover:border-slate-300 hover:text-slate-900">
-              <Filter size={18} />
-              Bộ lọc nâng cao
-            </button>
-            <button className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-500 px-5 py-3 text-sm font-semibold text-white shadow-[0_15px_35px_rgba(59,130,246,.35)] transition hover:-translate-y-0.5">
-              <Plus size={18} />
-              Quản lí sản phẩm
-            </button>
-          </div>
+          
         </div>
 
         {/* Summary Cards */}
-        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
-          {summaryCards.map((card) => {
-            const Icon = card.icon;
-            return (
-              <div
-                key={card.label}
-                className={`rounded-3xl border ${card.accent} bg-white p-5 text-slate-900 shadow-xl`}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="text-sm font-semibold uppercase tracking-wide text-slate-500">
-                    {card.label}
-                  </div>
-                  <span className="rounded-2xl bg-slate-100 p-2 text-slate-600 shadow-inner">
-                    <Icon size={20} />
-                  </span>
-                </div>
-                <div className="mt-6 text-4xl font-bold text-slate-900">{card.value}</div>
-                <p className="mt-2 text-sm text-slate-500">{card.change}</p>
-              </div>
-            );
-          })}
-        </div>
+        
 
         {/* Filter + Search */}
         <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-xl">
@@ -202,7 +244,12 @@ export default function Dashboard() {
                 <div className="col-span-2 font-medium text-slate-600">{categories.find(category => category.id === product.category_id)?.name}</div>
                 <div className="col-span-2 font-semibold text-slate-900">{formatPrice(product.price)}</div>
                 <div className="col-span-2 text-slate-500">
-                  <span className="text-base font-bold text-slate-900">{product.variations.reduce((acc, variation) => acc + variation.quantity, 0)}</span> sản phẩm
+                  <ul className="text-sm font-bold text-slate-900">
+                    {product.variations.map(variation => (
+                      <li key={variation.id}>{variation.size} : {variation.quantity}</li>
+                    ))}
+                    </ul>
+                  
                 </div>
                 <div className="col-span-2 flex justify-end gap-2">
                   {/* <Link to={`/admin/products/${product.id}`} className="rounded-2xl border border-slate-200 bg-white p-2 text-slate-500 transition hover:border-blue-200 hover:text-blue-600">
@@ -214,6 +261,8 @@ export default function Dashboard() {
                 </div>
               </div>
             )})}
+          </div>
+        </div>
           </div>
         </div>
       </div>

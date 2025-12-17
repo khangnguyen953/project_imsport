@@ -6,14 +6,14 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from 'react-i18next'
 
 
-const ProductInfo = ({ product, variations = [], highlights }) => {
+const ProductInfo = ({ product, variations = [], translations = {} }) => {
   const [selectedSize, setSelectedSize] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const { addToCart } = useCart();
   const { t, i18n } = useTranslation();
   const language = i18n.language;
   const navigate = useNavigate();
-
+  console.log(" translations",  translations);
   const sizeVariations = useMemo(() => (
     Array.isArray(variations) ? variations : []
   ), [variations]);
@@ -147,7 +147,7 @@ const ProductInfo = ({ product, variations = [], highlights }) => {
       <div className="pt-5 border-t border-gray-200">
         <h3 className="text-red-600 font-semibold mb-3">{t("productInfo.highlight")}</h3>
         <ul className="text-gray-700 space-y-1 mb-4">
-          {highlights.map((item, i) => (
+          {translations[language]?.highlights?.split("\n").map((item, i) => (
             <li
               key={i}
               className="relative pl-4 before:content-['-'] before:absolute before:left-0 before:"
