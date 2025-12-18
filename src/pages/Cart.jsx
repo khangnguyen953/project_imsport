@@ -102,7 +102,7 @@ return (
                                             <div key={index} className='border-y-[1px] border-[#ebebeb] py-4 flex gap-x-2'>
                                                 <div className='text-center md:w-[15%] w-[25%]'><Link to={`/product/${item.id}`}><img src={item.image} alt={item.name} className='w-full object-cover' /></Link></div>
                                                 <div className='md:flex md:w-[50%] w-[55%] items-center'>
-                                                    <div className='text-left md:w-[70%] w-full px-1'><Link to={`/product/${item.id}`} className='hover:text-[#673AB7] text-[#333333] md:font-normal font-semibold md:uppercase normal-case text-sm'>{item.translations[language].name} - {item.variations.find(variation => variation.variation_id === item.variationId)?.size}</Link></div>
+                                                    <div className='text-left md:w-[70%] w-full px-1'><Link to={`/product/${item.id}`} className='hover:text-[#673AB7] text-[#333333] md:font-normal font-semibold md:uppercase normal-case text-sm'>{item.translations?.[language]?.name} - {item.variations?.find(variation => variation.variation_id === item.variationId)?.size}</Link></div>
                                                     <div className='md:text-center text-start md md:w-[30%] px-1 w-full md:text-[#858688] text-[#673AB7] md:font-semibold font-normal text-sm '><span className='md:hidden inline-block text-[#898989]'>Giá:</span> {formatPrice(Number(item.price))}</div>
                                                 </div>
                                                 <div className='md:flex md:w-[35%] w-[20%] items-center'>
