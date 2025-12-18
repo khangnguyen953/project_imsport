@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, use } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import Breadcrumb from '../components/Filter/Breadcrumb';
@@ -7,7 +7,9 @@ import { validateCheckoutForm, formatOrderData } from '../utils/checkoutValidati
 import '../styles/pages/Checkout.scss';
 import { useTranslation } from 'react-i18next';
 const Checkout = () => {
-    const { cart, totalPrice } = useCart();
+    const { cart, totalPrice,userId } = useCart();
+    console.log('cart in checkout', cart);
+         console.log('use', userId);
     const navigate = useNavigate();
     const { t, i18n } = useTranslation();
     const language = i18n.language;
@@ -29,12 +31,12 @@ const Checkout = () => {
     const [discountApplied, setDiscountApplied] = useState(null);
     const [agreeTerms, setAgreeTerms] = useState(false);
     const [formErrors, setFormErrors] = useState({});
-    
+
     // Loading & Error states
     const [isLoading, setIsLoading] = useState(false);
     const [isLoadingAddress, setIsLoadingAddress] = useState(false);
     const [error, setError] = useState(null);
-    
+
     // Address data from API
     const [provinces, setProvinces] = useState([]);
     const [districts, setDistricts] = useState([]);
@@ -48,7 +50,7 @@ const Checkout = () => {
         //     navigate('/cart');
         //     return;
         // }
-        
+
         // Load provinces từ API
         loadProvinces();
     }, [cart, navigate]);
@@ -68,7 +70,7 @@ const Checkout = () => {
     useEffect(() => {
         if (formData.district) {
             loadWards(formData.district);
-            // Reset ward when district changes
+
             setFormData(prev => ({ ...prev, ward: '' }));
             // setWards([]);
         }
@@ -78,18 +80,12 @@ const Checkout = () => {
     const loadProvinces = async () => {
         try {
             setIsLoadingAddress(true);
-            // TODO: Uncomment khi API sẵn sàng
-            // const data = await CheckoutAPI.getProvinces();
-            // setProvinces(data);
-            
-            // Tạm thời dùng dummy data
-            setProvinces([
-                { id: 1, name: 'Hà Nội' },
-                { id: 2, name: 'Hồ Chí Minh' },
-                { id: 3, name: 'Đà Nẵng' },
-                { id: 4, name: 'Hải Phòng' },
-                { id: 5, name: 'Cần Thơ' }
-            ]);
+
+            const data = await CheckoutAPI.getProvinces();
+            console.log("log tỉnh", data);
+
+            setProvinces(data.data);
+
         } catch (error) {
             console.error('Error loading provinces:', error);
             setError(t('checkout.loadProvincesError'));
@@ -126,17 +122,9 @@ const Checkout = () => {
         try {
             setIsLoadingAddress(true);
             // TODO: Uncomment khi API sẵn sàng
-            // const data = await CheckoutAPI.getWards(districtId);
-            // setWards(data);
-            
-            // Tạm thời dùng dummy data
-            setWards([
-                { id: 1, name: 'Phường 1' },
-                { id: 2, name: 'Phường 2' },
-                { id: 3, name: 'Phường 3' },
-                { id: 4, name: 'Phường 4' },
-                { id: 5, name: 'Phường 5' }
-            ]);
+            const data = await CheckoutAPI.getWards(districtId);
+            setWards(data.data);
+
         } catch (error) {
             console.error('Error loading wards:', error);
             setError(t('checkout.loadWardsError'));
@@ -183,11 +171,11 @@ const Checkout = () => {
         try {
             setIsLoading(true);
             const subtotal = cart.reduce((total, item) => total + Number(item.price) * Number(item.quantity), 0);
-            
+
             // TODO: Uncomment khi API sẵn sàng
             // const result = await CheckoutAPI.applyDiscountCode(discountCode, subtotal);
             // setDiscountApplied(result);
-            
+
             // Tạm thời: Mock response
             setDiscountApplied({
                 discount: 100000,
@@ -224,26 +212,28 @@ const Checkout = () => {
 
         try {
             setIsLoading(true);
-            
+
             // Calculate totals
             const subtotal = cart.reduce((total, item) => total + Number(item.price) * Number(item.quantity), 0);
             const discountAmount = discountApplied?.discount || 0;
             const shippingFee = 0;
             const total = subtotal - discountAmount + shippingFee;
-
+       
             // Format order data
             const orderData = formatOrderData(
                 formData,
                 cart,
                 paymentMethod,
                 discountCode,
-                total
+                total,
+                userId,
             );
 
             // TODO: Uncomment khi API sẵn sàng
+            console.log('Order data :', orderData);
             // const result = await CheckoutAPI.createOrder(orderData);
-            
-            // Tạm thời: Mock response
+            // console.log('Order data to send:', result);
+            // // Tạm thời: Mock response
             console.log('Order data to send:', orderData);
             const result = {
                 orderId: 'ORD-' + Date.now(),
@@ -261,7 +251,7 @@ const Checkout = () => {
             
             // Clear cart và redirect
             // navigate('/order-success', { state: { orderId: result.orderId } });
-            
+
         } catch (error) {
             console.error('Error creating order:', error);
             setError(error.response?.data?.message || t('checkout.orderError'));
@@ -479,7 +469,7 @@ const Checkout = () => {
                                 />
                                 <span>{t('checkout.paymentBank')}</span>
                             </label>
-                            
+
                             {paymentMethod === 'bank' && (
                                 <div className="bank-info">
                                     <p><strong>{t('checkout.bankCompanyNameLabel')}</strong> {t('checkout.bankCompanyName')}</p>
@@ -552,8 +542,8 @@ const Checkout = () => {
                                     placeholder={t('checkout.discountCodePlaceholder')}
                                     disabled={isLoading}
                                 />
-                                <button 
-                                    type="button" 
+                                <button
+                                    type="button"
                                     className="apply-btn"
                                     onClick={handleApplyDiscount}
                                     disabled={isLoading || !discountCode.trim()}
@@ -576,8 +566,8 @@ const Checkout = () => {
                             <Link to="/cart" className="btn-continue" onClick={(e) => isLoading && e.preventDefault()}>
                                 {t('checkout.continueShopping')}
                             </Link>
-                            <button 
-                                type="button" 
+                            <button
+                                type="button"
                                 className="btn-checkout"
                                 onClick={handleSubmit}
                                 disabled={isLoading}

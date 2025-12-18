@@ -188,6 +188,7 @@ const ProductCategoryPage = () => {
 
     setFilteredData(result);
   }, [filters, products, normalizedSelectedBrands]);
+  console.log("new Data:", dataNew);
   return (
     <>
       <Breadcrumb category={category} subcategory={subcategory} />

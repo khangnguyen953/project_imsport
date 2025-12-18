@@ -23,12 +23,14 @@ import i18n from "./i18next/i18next";
 import Error from "./pages/Error";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import OrderHistory from "./components/OrderHistory";
+import GeminiChat from "./pages/GeminiChatWidget";
 function App() {
   return (
     <I18nextProvider i18n={i18n}>
       <Router>
         <ScrollToTop />
-
+        <GeminiChat/>
         <Routes>
           {/* 🔹 Dùng layout chính */}
           <Route path="/" element={<MainLayout />}>
@@ -50,6 +52,8 @@ function App() {
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/checkout-preview" element={<CheckoutPreview />} />
             <Route path="/chatbot" element={<ChatbotPage />} />
+            <Route path="/order" element={<OrderHistory />} />
+    
           </Route>
           <Route path="/admin">
             <Route index element={<Dashboard />} />

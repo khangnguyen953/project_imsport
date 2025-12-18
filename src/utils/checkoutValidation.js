@@ -89,7 +89,8 @@ export const formatOrderData = (
   cartItems,
   paymentMethod,
   discountCode,
-  total
+  total,
+  userId
 ) => {
   return {
     customer_info: {
@@ -104,15 +105,17 @@ export const formatOrderData = (
     items: cartItems.map((item) => ({
       product_id: item.id,
       name: item.name,
+      image: item.image || null,
       price: Number(item.price),
       quantity: Number(item.quantity),
       size: item.selectedSize || null,
-      sku: item.sku || null,
+      sku:  item.sku || null,
     })),
     payment_method: paymentMethod,
     discount_code: discountCode || null,
     total: total,
     notes: formData.notes?.trim() || null,
+    user_id: userId || null,
     created_at: new Date().toISOString(),
   };
 };

@@ -1,6 +1,7 @@
 import axios from "axios";
 import BaseUrl from "./BaseUrl";
 
+const APITinhThanh = "https://esgoo.net/api-tinhthanh";
 const CheckoutAPI = {
   /**
    * Tạo đơn hàng mới
@@ -15,11 +16,7 @@ const CheckoutAPI = {
    */
   createOrder: async (orderData) => {
     try {
-      const response = await axios.post(`${BaseUrl}/orders`, orderData, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await axios.post(`${BaseUrl}/orders`, orderData);
       return response.data;
     } catch (error) {
       console.error("Error creating order:", error);
@@ -33,7 +30,7 @@ const CheckoutAPI = {
    */
   getProvinces: async () => {
     try {
-      const response = await axios.get(`${BaseUrl}/address/provinces`);
+      const response = await axios.get(`${APITinhThanh}/1/0.htm`);
       return response.data;
     } catch (error) {
       console.error("Error fetching provinces:", error);
@@ -49,7 +46,7 @@ const CheckoutAPI = {
   getDistricts: async (provinceId) => {
     try {
       const response = await axios.get(
-        `${BaseUrl}/address/districts?province_id=${provinceId}`
+        `${APITinhThanh}/2/${provinceId}.htm`
       );
       return response.data;
     } catch (error) {
@@ -66,7 +63,7 @@ const CheckoutAPI = {
   getWards: async (districtId) => {
     try {
       const response = await axios.get(
-        `${BaseUrl}/address/wards?district_id=${districtId}`
+        `${APITinhThanh}/3/${districtId}.htm`
       );
       return response.data;
     } catch (error) {
@@ -112,6 +109,24 @@ const CheckoutAPI = {
       throw error;
     }
   },
+
+  getOrderAllHistory: async () => {
+    try {
+      const response = await axios.get(`${BaseUrl}/orders`);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching order history:", error);
+      throw error;
+    }
+  }, getOrderAllHistory: async (user_id) => {
+    try {
+      const response = await axios.get(`${BaseUrl}/orders/${user_id}`);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching order history:", error);
+      throw error;
+    }
+  }
 };
 
 export default CheckoutAPI;

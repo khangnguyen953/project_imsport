@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import "../styles/components/Header.scss";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-
+import order from"../assets/images/orders-icon.png";
 // Assets
 import logo from "../assets/images/logo.png";
 import vnFlag from "../assets/images/vn.png";
@@ -27,7 +27,7 @@ import { LogOutIcon } from "lucide-react";
 
 export default function Header() {
   const [showMobileSearch, setShowMobileSearch] = useState(false);
-  const { cartCount, setUserId, setCartCount} = useCart();
+  const { cartCount, setUserId, setCartCount } = useCart();
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeSubmenu, setActiveSubmenu] = useState(null);
@@ -240,6 +240,16 @@ export default function Header() {
                 </span>
               </Link>
             </li>
+            <li className="relative flex items-center">
+              <Link to="/order" className="hover:text-orange-500 relative flex">
+              <img src={order}
+               className="h-5 w-5 cursor-pointer"
+                alt="" />
+              
+               
+              </Link>
+            </li>
+
 
             {/* Language */}
             <li className="flex items-center gap-2">
@@ -273,8 +283,8 @@ export default function Header() {
           {t("header.about")}
         </Link>
         {categoriesType.map((categoryType) => {
-            const categoriesSub = (categories.filter((category) => category.categories_type_id === categoryType.id))
-            return (
+          const categoriesSub = (categories.filter((category) => category.categories_type_id === categoryType.id))
+          return (
             <div key={categoryType.id} className="nav-dropdown">
               <Link to={`/${categoryType.slug}`} className="nav-link">{categoryType.translations[i18n.language].name} <span className="caret"><ChevronDownIcon className="h-4 w-4 ml-1 text-gray-500" />
               </span></Link>
@@ -294,9 +304,9 @@ export default function Header() {
 
       {/* Navigation mobile */}
       <div className={`mobile-menu ${isMenuOpen ? "open" : ""}`}>
-          <div className="mobile-nav-header">
-            <p>{t("header.menu")}</p>
-          </div>
+        <div className="mobile-nav-header">
+          <p>{t("header.menu")}</p>
+        </div>
 
         <nav className="mobile-nav">
           <div className="mobile-nav-item">
@@ -479,9 +489,8 @@ export default function Header() {
 
       {/* Mobile search */}
       <div
-        className={`md:hidden absolute top-16 right-0 w-2/3 bg-gray-100 border border-gray-300 flex items-center p-2 rounded-l-md shadow-md z-50 overflow-hidden transition-all duration-500 ease-linear ${
-          showMobileSearch ? "max-h-20 opacity-100" : "max-h-0 opacity-0"
-        }`}
+        className={`md:hidden absolute top-16 right-0 w-2/3 bg-gray-100 border border-gray-300 flex items-center p-2 rounded-l-md shadow-md z-50 overflow-hidden transition-all duration-500 ease-linear ${showMobileSearch ? "max-h-20 opacity-100" : "max-h-0 opacity-0"
+          }`}
       >
         <input
           type="text"
