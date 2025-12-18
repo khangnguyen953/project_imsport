@@ -34,6 +34,15 @@ export default function CategoryManager() {
     return map;
   }, [categoryTypes]);
   useEffect(() => {
+    if(!token) {
+      if(user?.role == 'ROLE_ADMIN') {
+        navigate('/admin')
+        return;
+      } else {
+        navigate('/')
+        return;
+      }
+    }
     const fetchData = async () => {
       const [categoryRes, typeRes] = await Promise.all([
         CategoryAPI.getCategory(),

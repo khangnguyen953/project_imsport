@@ -20,6 +20,15 @@ export default function ProductEditor() {
   const [thumbnailPreviews, setThumbnailPreviews] = useState([]); // Mảng các URL preview
   const [isUploadingThumbnails, setIsUploadingThumbnails] = useState(false);
   useEffect(() => {
+    if(!token) {
+      if(user?.role == 'ROLE_ADMIN') {
+        navigate('/admin')
+        return;
+      } else {
+        navigate('/')
+        return;
+      }
+    }
     const fetchData = async () => {
       const [categoriesResponse, productsResponse] = await Promise.all([
         CategoryAPI.getCategory(),

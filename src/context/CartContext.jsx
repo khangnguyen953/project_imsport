@@ -6,7 +6,11 @@ const CartContext = createContext();
 export const CartProvider = ({ children }) => {
   const [cart, setCart] = useState(JSON.parse(localStorage.getItem('cart')) || []);
   const [userId, setUserId] = useState(JSON.parse(localStorage.getItem('user'))?.id || null);
+  const [user, setUser] = useState(JSON.parse(localStorage.getItem('user')) || null);
   const [cartCount, setCartCount] = useState(JSON.parse(localStorage.getItem('cart'))?.length || 0);
+  useEffect(() => {
+    setUser(JSON.parse(localStorage.getItem('user')) || null);
+  }, []);
   // 🔹 Load dữ liệu giỏ hàng từ localStorage khi app khởi động
 
   useEffect(() => {
@@ -98,7 +102,7 @@ export const CartProvider = ({ children }) => {
 
   return (
     <CartContext.Provider
-      value={{ cart, setCart, addToCart, updateQuantity, removeFromCart, cartCount, userId, setUserId, setCartCount }}
+      value={{ cart, setCart, addToCart, updateQuantity, removeFromCart, cartCount, userId, setUserId, setCartCount, user }}
     >
       {children}
     </CartContext.Provider>

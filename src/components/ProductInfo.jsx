@@ -70,7 +70,7 @@ const ProductInfo = ({ product, variations = [], translations = {} }) => {
 
       {/* Giá */}
       <p className=" text-black pb-4 ">
-        {t("productInfo.price")}: <span className=" text-2xl">{formatPrice(Number(selectedVariation?.price ?? product?.price ?? 0))}</span>
+        {t("productInfo.price")}: <span className=" text-2xl">{formatPrice(Number(product?.price ?? selectedVariation?.price ??  0))}</span>
       </p>
 
       {/* Chọn size */}
@@ -78,7 +78,7 @@ const ProductInfo = ({ product, variations = [], translations = {} }) => {
         <p className="font-medium mb-3">{t("productInfo.selectSize")}:</p>
         <div className="flex flex-wrap gap-2">
           {sizeVariations.map(({ sku, size, quantity }) => {
-            const isOutOfStock = quantity === 0;
+            const isOutOfStock = quantity == 0;
             return (
               <label className={`cursor-pointer ${isOutOfStock ? 'opacity-50' : ''}`} key={sku}>
                 <input

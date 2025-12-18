@@ -10,7 +10,7 @@ const Login = () => {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    const { cart, setUserId, setCart, setCartCount } = useCart();
+    const { cart, setUserId, setCart, setCartCount, user } = useCart();
     useEffect(() => {
         if (localStorage.getItem('token')) {
             navigate('/')
@@ -37,6 +37,10 @@ const Login = () => {
         localStorage.setItem('token', loginResponse.token)
         localStorage.setItem('user', JSON.stringify(loginResponse.user))
         setUserId(loginResponse.user.id);
+        if(user && user.role == 'ROLE_ADMIN') {
+          navigate('/admin')
+          return;
+        }
         const payload = {
           user_id: loginResponse.user.id,
           action: 'merge',

@@ -34,9 +34,7 @@ const Cart = () => {
                 product_id: id,
                 variation_id: variationId,
             }
-            console.log('payload', payload);
             const response = await CartAPI.removeCart(userId, payload);
-            console.log('response', response);
             removeFromCart(id, variationId);
 
         }else {
