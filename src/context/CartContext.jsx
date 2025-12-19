@@ -4,10 +4,38 @@ import CartAPI from "../service/CartAPI";
 const CartContext = createContext();
 
 export const CartProvider = ({ children }) => {
-  const [cart, setCart] = useState(JSON.parse(localStorage.getItem('cart')) || []);
+  const [cart, setCart] = useState(() => {
+    try {
+      const storedCart = localStorage.getItem('cart');
+      // Nếu không có dữ liệu hoặc dữ liệu là chuỗi rỗng -> trả về mảng rỗng
+      if (!storedCart || storedCart === "undefined" || storedCart === "") {
+        return [];
+      }
+      return JSON.parse(storedCart);
+    } catch (error) {
+      console.error("Lỗi khi đọc giỏ hàng từ LocalStorage:", error);
+      // Nếu lỗi JSON (do dữ liệu cũ bị hỏng), reset về mảng rỗng luôn
+      return [];
+    }
+  });
   const [userId, setUserId] = useState(JSON.parse(localStorage.getItem('user'))?.id || null);
   const [user, setUser] = useState(JSON.parse(localStorage.getItem('user')) || null);
-  const [cartCount, setCartCount] = useState(JSON.parse(localStorage.getItem('cart'))?.length || 0);
+  const [cartCount, setCartCount] = useState(() => {
+    try {
+      const storedCart = localStorage.getItem('cart');
+      // Kiểm tra kỹ trước khi parse
+      if (!storedCart || storedCart === "") {
+        return 0;
+      }
+
+      const parsedCart = JSON.parse(storedCart);
+      // Kiểm tra xem nó có phải là mảng không rồi mới lấy length
+      return Array.isArray(parsedCart) ? parsedCart.length : 0;
+    } catch (error) {
+      // Nếu lỗi JSON, mặc định về 0
+      return 0;
+    }
+  });
   useEffect(() => {
     setUser(JSON.parse(localStorage.getItem('user')) || null);
   }, []);

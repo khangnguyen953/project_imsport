@@ -25,6 +25,8 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import OrderHistory from "./components/OrderHistory";
 import GeminiChat from "./pages/GeminiChatWidget";
+
+import OrderAdmin from "./components/AdminOrderModal";
 function App() {
   return (
     <I18nextProvider i18n={i18n}>
@@ -53,12 +55,14 @@ function App() {
             <Route path="/checkout-preview" element={<CheckoutPreview />} />
             <Route path="/chatbot" element={<ChatbotPage />} />
             <Route path="/order" element={<OrderHistory />} />
+          
     
           </Route>
           <Route path="/admin">
             <Route index element={<Dashboard />} />
             <Route path="products" element={<ProductEditor />} />
             <Route path="categories" element={<CategoryManager />} />
+              <Route path="orderadmin" element={<OrderAdmin />} />
           </Route>
         </Routes>
       </Router>
