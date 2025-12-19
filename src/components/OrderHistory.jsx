@@ -189,7 +189,7 @@ export default function OrderHistory() {
 
         {/* Thanh tìm kiếm */}
         <div className="mb-6">
-          {userId && 
+          {!userId && 
           <div className="relative">
             <input
               type="text"
