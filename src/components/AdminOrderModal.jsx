@@ -1,6 +1,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import CheckoutAPI from '../service/CheckoutAPI';
 import Breadcrumb from './Filter/Breadcrumb';
+import { useCart } from '../context/CartContext';
+import { useNavigate } from 'react-router-dom';
 
 // --- UTILS ---
 const formatCurrency = (amount) => {
@@ -207,7 +209,8 @@ export default function OrderAdmin() {
     const [orders, setOrders] = useState([]);
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
-
+    const { user } = useCart();
+    const navigate = useNavigate();
     // Hàm tải dữ liệu (Tách ra để tái sử dụng khi update thành công)
     const fetchAdminData = async () => {
         setIsLoading(true);
@@ -240,6 +243,12 @@ export default function OrderAdmin() {
     };
 
     useEffect(() => {
+        console.log("user", user);
+        
+        if(!user || user.role != 'ROLE_ADMIN') {
+            navigate('/')
+            return;
+          }
         fetchAdminData();
     }, []);
 

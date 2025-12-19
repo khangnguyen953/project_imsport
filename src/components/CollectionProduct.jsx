@@ -8,6 +8,7 @@ import { product2 } from '../data/product2'
 import { categories } from '../data/categories'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import CategoryTypeAPI from '../service/CategoryTypeAPI'
 const data =
 {
     title: 'Đồ Nam',
@@ -91,18 +92,21 @@ const CollectionProduct = () => {
     const [products, setProducts] = useState()
     const { t, i18n } = useTranslation();
     const language = i18n.language;
+    const [categoryTypes, setCategoryTypes] = useState([]);
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [categories, products] = await Promise.all([
+                const [categories, products, categoryTypes] = await Promise.all([
                     ProductAPI.getCategories(),
-                    ProductAPI.getProducts()
+                    ProductAPI.getProducts(),
+                    CategoryTypeAPI.getCategoryType()
                 ]);
                 setProducts(
                     products.filter(item =>
                         categories.some(c => c.categories_type_id === 1 && c.id === item.category_id)
                     ).slice(0, 6)
                 );
+                setCategoryTypes(categoryTypes);
             } catch (error) {
                 console.error('Error fetching data:', error);
             }
@@ -111,25 +115,36 @@ const CollectionProduct = () => {
     }, []);
     return (
         <>
-            <div className='container mx-auto !pt-10'>
-                <h3 className='text-[28px] uppercase text-center mb-10'>
-                    <Link to='/do-nam' className='text-[#333333] hover:text-[#673AB7] font-semibold'>{t("collection.doNam")}</Link>
-                </h3>
-                <div className='grid grid-cols-1 min-[1000px]:grid-cols-2'>
-                    <div className='col-span-1 px-4'>
-                        <a href='/'>
-                            <img src={imgCategoryCollection1} alt="collection" className='w-full h-full object-cover' />
-                        </a>
-                    </div>
-                    <div className='col-span-1 px-4'>
-                        <div className='grid grid-cols-2 md:grid-cols-3 gap-x-1 gap-y-4'>
-                            {products?.map((item) => (
-                                <ProductCard key={item.id} item={item} />
-                            ))}
+            {categoryTypes.sort((a, b) => a.id - b.id).map((categoryType) => {
+                const productsData = products.filter(item =>
+                    categories.some(c => c.categories_type_id === categoryType.id && c.id === item.category_id)
+                );
+                console.log("productsData", productsData);
+                if(productsData.length === 0) {
+                    return null;
+                }
+                return (
+                <div className='container mx-auto !pt-10'>
+                    <h3 className='text-[28px] uppercase text-center mb-10'>
+                        <Link to={`/${categoryType.slug}`} className='text-[#333333] hover:text-[#673AB7] font-semibold'>{categoryType.translations[i18n.language].name}</Link>
+                    </h3>
+                    <div className='grid grid-cols-1 min-[1000px]:grid-cols-2'>
+                        <div className='col-span-1 px-4'>
+                            <a href='/'>
+                                <img src={imgCategoryCollection1} alt="collection" className='w-full h-full object-cover' />
+                            </a>
+                        </div>
+                        <div className='col-span-1 px-4'>
+                            <div className='grid grid-cols-2 md:grid-cols-3 gap-x-1 gap-y-4'>
+                                {productsData?.map((item) => (
+                                    <ProductCard key={item.id} item={item} />
+                                ))}
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
+                )
+            })}
 
         </>
     )
