@@ -25,6 +25,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import OrderHistory from "./components/OrderHistory";
 import GeminiChat from "./pages/GeminiChatWidget";
+import CategoryTypeManager from "./pages/Admin/CategoryTypeManager";
 function App() {
   return (
     <I18nextProvider i18n={i18n}>
@@ -59,6 +60,7 @@ function App() {
             <Route index element={<Dashboard />} />
             <Route path="products" element={<ProductEditor />} />
             <Route path="categories" element={<CategoryManager />} />
+            <Route path="category-types" element={<CategoryTypeManager />} />
           </Route>
         </Routes>
       </Router>
