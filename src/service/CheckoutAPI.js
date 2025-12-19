@@ -118,9 +118,19 @@ const CheckoutAPI = {
       console.error("Error fetching order history:", error);
       throw error;
     }
-  }, getOrderAllHistory: async (user_id) => {
+  }, getOrderAllHistoryByUser: async (user_id) => {
     try {
       const response = await axios.get(`${BaseUrl}/orders/${user_id}`);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching order history:", error);
+      throw error;
+    }
+  }
+  ,
+  updateOrder: async (id, data) => {
+    try {
+      const response = await axios.put(`${BaseUrl}/orders/action/${id}`, data);
       return response.data;
     } catch (error) {
       console.error("Error fetching order history:", error);

@@ -13,7 +13,6 @@ const ProductInfo = ({ product, variations = [], translations = {} }) => {
   const { t, i18n } = useTranslation();
   const language = i18n.language;
   const navigate = useNavigate();
-  console.log(" translations",  translations);
   const sizeVariations = useMemo(() => (
     Array.isArray(variations) ? variations : []
   ), [variations]);
@@ -100,9 +99,9 @@ const ProductInfo = ({ product, variations = [], translations = {} }) => {
               </label>
             );
           })}
-          {!sizeVariations.length && (
+          {/* {!sizeVariations.length && (
             <p className="text-sm text-gray-500">{t("productInfo.noSize")}</p>
-          )}
+          )} */}
         </div>
       </div>
 

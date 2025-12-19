@@ -5,6 +5,8 @@ import ProductAPI from "../../service/ProductAPI";
 import CategoryAPI from "../../service/CategoriesAPI";
 import { Link } from "react-router-dom";
 import UploadAPI from "../../service/UploadAPI";
+import { useCart } from "../../context/CartContext";
+import { useNavigate } from "react-router-dom";
 const IMAGE_EXTENSION = ".jpg";
 const CLOUD_FRONT_URL = "https://d1qcfqyg1kloza.cloudfront.net";
 const CLOUD_FRONT_URL_THUMBNAIL = "https://d8xkktdpkwrmf.cloudfront.net";
@@ -19,16 +21,13 @@ export default function ProductEditor() {
   const [thumbnailFiles, setThumbnailFiles] = useState([]); // Mảng các File object
   const [thumbnailPreviews, setThumbnailPreviews] = useState([]); // Mảng các URL preview
   const [isUploadingThumbnails, setIsUploadingThumbnails] = useState(false);
+  const { user } = useCart();
+  const navigate = useNavigate();
   useEffect(() => {
-    if(!token) {
-      if(user?.role == 'ROLE_ADMIN') {
-        navigate('/admin')
-        return;
-      } else {
+      if(!user?.role == 'ROLE_ADMIN') {
         navigate('/')
         return;
       }
-    }
     const fetchData = async () => {
       const [categoriesResponse, productsResponse] = await Promise.all([
         CategoryAPI.getCategory(),

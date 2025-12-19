@@ -11,6 +11,8 @@ import {
   Filter,
   LayoutDashboard,
   FolderTree,
+  Tag,
+  ShoppingCart,
 } from "lucide-react";
 import ProductAPI from "../../service/ProductAPI";
 import CategoryAPI from "../../service/CategoriesAPI";
@@ -94,6 +96,16 @@ export default function Dashboard() {
       label: "Quản lí category",
       path: "/admin/categories",
       icon: FolderTree,
+    },
+    {
+      label: "Quản lí loại danh mục",
+      path: "/admin/category-types",
+      icon: Tag,
+    },
+    {
+      label: "Quản lí đơn hàng",
+      path: "/admin/orderadmin",
+      icon: ShoppingCart,
     },
   ];
 

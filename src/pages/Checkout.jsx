@@ -1,5 +1,5 @@
 import React, { useState, useEffect, use } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, redirect } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import Breadcrumb from '../components/Filter/Breadcrumb';
 import CheckoutAPI from '../service/CheckoutAPI';
@@ -7,7 +7,8 @@ import { validateCheckoutForm, formatOrderData } from '../utils/checkoutValidati
 import '../styles/pages/Checkout.scss';
 import { useTranslation } from 'react-i18next';
 const Checkout = () => {
-    const { cart, totalPrice,userId } = useCart();
+    
+    const { cart, totalPrice,userId ,setCartCount} = useCart();
     console.log('cart in checkout', cart);
          console.log('use', userId);
     const navigate = useNavigate();
@@ -99,16 +100,11 @@ const Checkout = () => {
         try {
             setIsLoadingAddress(true);
             // TODO: Uncomment khi API sẵn sàng
-            // const data = await CheckoutAPI.getDistricts(provinceId);
-            // setDistricts(data);
+            const data = await CheckoutAPI.getDistricts(provinceId);
+            setDistricts(data.data);
             // Tạm thời dùng dummy data
-            setDistricts([
-                { id: 1, name: 'Quận 1' },
-                { id: 2, name: 'Quận 2' },
-                { id: 3, name: 'Quận 3' },
-                { id: 4, name: 'Quận 4' },
-                { id: 5, name: 'Quận 5' }
-            ]);
+            // setDistricts(data
+            //              );
         } catch (error) {
             console.error('Error loading districts:', error);
             setError(t('checkout.loadDistrictsError'));
@@ -191,7 +187,7 @@ const Checkout = () => {
         }
     };
 
-    // Submit order
+  // Submit order
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError(null);
@@ -214,14 +210,28 @@ const Checkout = () => {
             setIsLoading(true);
 
             // Calculate totals
-            const subtotal = cart.reduce((total, item) => total + Number(item.price) * Number(item.quantity), 0);
+            const subtotal = cart.reduce((total, item) => total + Number(item.price || 0) * Number(item.quantity || 0), 0);
             const discountAmount = discountApplied?.discount || 0;
             const shippingFee = 0;
             const total = subtotal - discountAmount + shippingFee;
        
-            // Format order data
+            // --- LOGIC MỚI: TÌM TÊN ĐỊA CHỈ TỪ ID ---
+            const provinceName = provinces.find(p => p.id === formData.province)?.name || '';
+            const districtName = districts.find(d => d.id === formData.district)?.name || '';
+            const wardName = wards.find(w => w.id === formData.ward)?.name || '';
+
+            // Tạo object formData mới với tên địa chỉ thay vì ID
+            const formDataWithNames = {
+                ...formData,
+                province: provinceName,
+                district: districtName,
+                ward: wardName
+            };
+            // ----------------------------------------
+
+            // Format order data (Sử dụng formDataWithNames)
             const orderData = formatOrderData(
-                formData,
+                formDataWithNames, // Truyền object đã sửa tên vào đây
                 cart,
                 paymentMethod,
                 discountCode,
@@ -229,28 +239,29 @@ const Checkout = () => {
                 userId,
             );
 
-            // TODO: Uncomment khi API sẵn sàng
-            console.log('Order data :', orderData);
-            // const result = await CheckoutAPI.createOrder(orderData);
-            // console.log('Order data to send:', result);
-            // // Tạm thời: Mock response
             console.log('Order data to send:', orderData);
-            const result = {
-                orderId: 'ORD-' + Date.now(),
-                message: t('checkout.orderSuccessMessage')
-            };
 
-            // Nếu là chuyển khoản, có thể cần xác nhận thanh toán
-            if (paymentMethod === 'bank') {
-                // TODO: Uncomment khi API sẵn sàng
-                // await CheckoutAPI.confirmPayment(result.orderId, { method: 'bank' });
+            const result = await CheckoutAPI.createOrder(orderData);
+            console.log('Order creation result:', result);
+            if(result){
+                navigate('/');
+                 localStorage.setItem("cart", "");
+            setCartCount(0);
             }
+             
+            //   navigate
+            // ... (Phần code gọi API giữ nguyên)
+            // const result = {
+            //     orderId: 'ORD-' + Date.now(),
+            //     message: t('checkout.orderSuccessMessage')
+            // };
 
-            // Redirect to success page hoặc hiển thị thông báo
-            alert(t('checkout.orderSuccessAlert', { orderId: result.orderId }));
-            
-            // Clear cart và redirect
-            // navigate('/order-success', { state: { orderId: result.orderId } });
+            // if (paymentMethod === 'bank') {
+            //     // await CheckoutAPI.confirmPayment(result.orderId, { method: 'bank' });
+            // }
+
+            // alert(t('checkout.orderSuccessAlert', { orderId: result.orderId }));
+          
 
         } catch (error) {
             console.error('Error creating order:', error);
@@ -499,7 +510,7 @@ const Checkout = () => {
                                         <tr key={index}>
                                             <td>
                                                 <Link to={`/product/${item.id}`} className="product-link">
-                                                    {item.name[language].name}
+                                                    {item?.translations[language].name}
                                                 </Link>
                                             </td>
                                             <td>{item.quantity}</td>

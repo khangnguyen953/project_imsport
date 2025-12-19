@@ -115,6 +115,7 @@ export const formatOrderData = (
     discount_code: discountCode || null,
     total: total,
     notes: formData.notes?.trim() || null,
+    status: "pending",
     user_id: userId || null,
     created_at: new Date().toISOString(),
   };

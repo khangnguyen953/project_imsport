@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-
+import { Link } from 'react-router-dom';
+import parse, { domToReact } from 'html-react-parser';
 const GeminiChatWidget = () => {
   // --- STATE QUẢN LÝ GIAO DIỆN ---
   const [isOpen, setIsOpen] = useState(false); // Trạng thái đóng/mở chat
@@ -30,7 +31,7 @@ const GeminiChatWidget = () => {
 
     const userMessage = { id: Date.now(), text: input, sender: 'user' };
     setMessages(prev => [...prev, userMessage]);
-    
+
     const userInput = input;
     setInput('');
     setIsLoading(true);
@@ -46,6 +47,7 @@ const GeminiChatWidget = () => {
 
       if (response.ok) {
         const botMessage = { id: Date.now() + 1, text: data.reply, sender: 'bot' };
+        console.log("Bot reply:", botMessage);
         setMessages(prev => [...prev, botMessage]);
       } else {
         throw new Error("Lỗi từ server");
@@ -63,18 +65,39 @@ const GeminiChatWidget = () => {
     if (e.key === 'Enter') handleSend();
   };
 
+  const renderMessageContent = (text) => {
+  // Mẹo: Nếu server lỡ trả về chuỗi "<Link to=", ta replace nó thành "<a href=" để parser hiểu
+  let cleanText = text
+    .replace(/<Link to=/g, '<a href=')
+    .replace(/<\/Link>/g, '</a>');
+
+  const options = {
+    replace: (domNode) => {
+      // Nếu gặp thẻ <a>, thay thế nó bằng component <Link>
+      if (domNode.name === 'a' && domNode.attribs && domNode.attribs.href) {
+        return (
+          <Link to={domNode.attribs.href} style={{ color: 'blue', textDecoration: 'underline' }}>
+            {domToReact(domNode.children)}
+          </Link>
+        );
+      }
+    },
+  };
+
+  return parse(cleanText, options);
+};
   // --- PHẦN GIAO DIỆN ---
   return (
     <div style={styles.widgetContainer}>
-      
+
       {/* 1. KHUNG CHAT (Chỉ hiện khi isOpen = true) */}
       {isOpen && (
         <div style={styles.chatWindow}>
           {/* Header có nút đóng */}
           <div style={styles.header}>
-            <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
-                <span style={{fontSize: '20px'}}>🤖</span>
-                <span>Trợ lý ảo TDC</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '20px' }}>🤖</span>
+              <span><Link to="/product/2">Trợ lý ảo TDC</Link></span>
             </div>
             <button style={styles.closeButton} onClick={() => setIsOpen(false)}>×</button>
           </div>
@@ -82,10 +105,10 @@ const GeminiChatWidget = () => {
           {/* List tin nhắn */}
           <div style={styles.messageList}>
             {messages.map((msg) => (
-              <div 
-                key={msg.id} 
+              <div
+                key={msg.id}
                 style={{
-                  ...styles.messageRow, 
+                  ...styles.messageRow,
                   justifyContent: msg.sender === 'user' ? 'flex-end' : 'flex-start'
                 }}
               >
@@ -93,15 +116,17 @@ const GeminiChatWidget = () => {
                   ...styles.messageBubble,
                   backgroundColor: msg.isError ? '#ffcccc' : (msg.sender === 'user' ? '#007bff' : '#f1f0f0'),
                   color: msg.isError ? 'red' : (msg.sender === 'user' ? 'white' : 'black')
-                }}>
-                  {msg.text}
+                }}
+                
+                >
+                  {renderMessageContent(msg.text)}
                 </div>
               </div>
             ))}
-            
+
             {isLoading && (
               <div style={styles.messageRow}>
-                <div style={{...styles.messageBubble, backgroundColor: '#f1f0f0', fontStyle: 'italic', color: '#666'}}>
+                <div style={{ ...styles.messageBubble, backgroundColor: '#f1f0f0', fontStyle: 'italic', color: '#666' }}>
                   <span className="loading-dots">Đang suy nghĩ...</span>
                 </div>
               </div>
@@ -119,8 +144,8 @@ const GeminiChatWidget = () => {
               placeholder="Nhập câu hỏi..."
               disabled={isLoading}
             />
-            <button 
-              style={{...styles.sendButton, opacity: isLoading ? 0.6 : 1}} 
+            <button
+              style={{ ...styles.sendButton, opacity: isLoading ? 0.6 : 1 }}
               onClick={handleSend}
               disabled={isLoading}
             >
@@ -131,8 +156,8 @@ const GeminiChatWidget = () => {
       )}
 
       {/* 2. NÚT TRÒN (TOGGLE BUTTON) */}
-      <button 
-        style={styles.toggleButton} 
+      <button
+        style={styles.toggleButton}
         onClick={() => setIsOpen(!isOpen)}
       >
         {isOpen ? '▼' : '💬'}

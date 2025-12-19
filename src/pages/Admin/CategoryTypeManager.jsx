@@ -6,22 +6,22 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useCart } from "../../context/CartContext";
 import { useNavigate } from "react-router-dom";
-export default function CategoryManager() {
+export default function CategoryTypeManager() {
   const navigate = useNavigate();
-  const [categories, setCategories] = useState([]);
   const [categoryTypes, setCategoryTypes] = useState([]);
   const [formMode, setFormMode] = useState("add"); // add | edit
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({
     name: "",
     slug: "",
-    categories_type_id: "",
     translations: {
       vi: {
         name: "",
+        description: "",
       },
       en: {
         name: "",
+        description: "",
       },
     },
   });
@@ -29,24 +29,16 @@ export default function CategoryManager() {
   const { t, i18n } = useTranslation();
   const { user } = useCart();
   const language = i18n.language;
-  const categoryTypeMap = useMemo(() => {
-    const map = {};
-    categoryTypes.forEach((t) => {
-      map[t.id] = t.translations.vi?.name;
-    });
-    return map;
-  }, [categoryTypes]);
+ 
   useEffect(() => {
       if(!user?.role == 'ROLE_ADMIN') {
         navigate('/')
         return;
       }
     const fetchData = async () => {
-      const [categoryRes, typeRes] = await Promise.all([
-        CategoryAPI.getCategory(),
+      const [typeRes] = await Promise.all([
         CategoryTypeAPI.getCategoryType(),
       ]);
-      setCategories(categoryRes);
       setCategoryTypes(typeRes);
       console.log("categoryTypes", typeRes);
     };
@@ -59,13 +51,14 @@ export default function CategoryManager() {
     setFormData({
       name: "",
       slug: "",
-      categories_type_id: categoryTypes[0]?.id || "",
       translations: {
         vi: {
           name: "",
+          description: "",
         },
         en: {
           name: "",
+          description: "",
         },
       },
     });
@@ -77,13 +70,14 @@ export default function CategoryManager() {
     setFormData({
       name: category.name || category.translations?.vi?.name || "",
       slug: category.slug || "",
-      categories_type_id: category.categories_type_id || "",
       translations: {
         vi: {
           name: category.translations?.vi?.name || category.name || "",
+          description: category.translations?.vi?.description || "",
         },
         en: {
           name: category.translations?.en?.name || "",
+          description: category.translations?.en?.description || "",
         },
       },
     });
@@ -103,22 +97,22 @@ export default function CategoryManager() {
         cancelButtonText: "Không"
       }).then(async (result) => {
         if (result.isConfirmed) {
-          await CategoryAPI.deleteCategory(id);
-          setCategories((prev) => prev.filter((c) => c.id !== id));
+          await CategoryTypeAPI.deleteCategoryType(id);
+          setCategoryTypes((prev) => prev.filter((c) => c.id !== id));
           if (editingId === id) resetForm();
           Swal.fire({
             title: "Thành công",
-            text: "Danh mục đã được xoá",
+            text: "Loại danh mục đã được xoá",
             icon: "success",
             confirmButtonText: "OK",
           });
         }
       });
     } catch (error) {
-      console.error("Delete category error", error);
+      console.error("Delete category type error", error);
       Swal.fire({
         title: "Lỗi",
-        text: "Xoá danh mục thất bại",
+        text: "Xoá loại danh mục thất bại",
         icon: "error",
       });
     }
@@ -132,38 +126,40 @@ export default function CategoryManager() {
       const payload = {
         ...formData,
         name: formData.translations.vi.name || formData.name,
-        id: Math.max(...categories.map(c => c.id)) + 1,
+        id: Math.max(...categoryTypes.map(c => c.id)) + 1,
       };
       console.log("payload", payload);
       if (formMode === "add") {
         console.log("ADD");
         
-        const created = await CategoryAPI.createCategory(payload);
-        setCategories((prev) => [...prev, created]);
+        const created = await CategoryTypeAPI.createCategoryType(payload);
+        console.log("created", created);
+        
+        setCategoryTypes((prev) => [...prev, created.item]);
         Swal.fire({
           title: "Thành công",
-          text: "Danh mục đã được tạo",
+          text: "Loại danh mục đã được tạo",
           icon: "success",
           confirmButtonText: "OK",
         });
       } else {
-        const updated = await CategoryAPI.updateCategory(editingId, payload);
+        const updated = await CategoryTypeAPI.updateCategoryType(editingId, payload);
         console.log("updated", updated);
         
-        setCategories((prev) =>
+        setCategoryTypes((prev) =>
           prev.map((c) => (c.id === editingId ? updated.item : c))
         );
         Swal.fire({
           title: "Thành công",
-          text: "Danh mục đã được cập nhật",
+          text: "Loại danh mục đã được cập nhật",
           icon: "success",
           confirmButtonText: "OK",
         });
       }
       resetForm();
     } catch (error) {
-      console.error("Save category error", error);
-      alert("Lưu danh mục thất bại");
+      console.error("Save category type error", error);
+      alert("Lưu loại danh mục thất bại");
     } finally {
       setLoading(false);
     }
@@ -218,10 +214,10 @@ export default function CategoryManager() {
             
             <div>
               <p className="text-sm uppercase tracking-[0.3em] text-slate-500">
-                Category manager
+                Category type manager
               </p>
               <h1 className="mt-2 text-3xl font-bold text-slate-900">
-                Quản lí danh mục
+                Quản lí loại danh mục
               </h1>
             </div>
           </div>
@@ -242,7 +238,7 @@ export default function CategoryManager() {
               className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-500 px-5 py-3 text-sm font-semibold text-white shadow-[0_15px_35px_rgba(59,130,246,.35)] transition hover:-translate-y-0.5"
             >
               <Plus size={18} />
-              Tạo danh mục mới
+              Tạo loại danh mục mới
             </button>
           </div>
         </div>
@@ -251,45 +247,41 @@ export default function CategoryManager() {
           {/* Table */}
           <div className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-2xl">
             <div className="grid grid-cols-12 border-b border-slate-100 bg-slate-50 px-6 py-4 text-xs font-semibold uppercase tracking-wide text-slate-500">
-              <div className="col-span-5">Tên danh mục</div>
+              <div className="col-span-5">Tên loại danh mục</div>
               <div className="col-span-3">Slug</div>
-              <div className="col-span-2">Loại</div>
               <div className="col-span-2 text-right">Thao tác</div>
             </div>
             <div className="divide-y divide-slate-100 max-h-[520px] overflow-y-auto">
-              {categories.map((category, index) => (
+              {categoryTypes.map((categoryType, index) => (
                 <div
                   key={index}
                   className="grid grid-cols-12 items-center px-6 py-4 text-sm text-slate-600 transition hover:bg-slate-50"
                 >
                   <div className="col-span-5">
                     <p className="font-semibold text-slate-900">
-                      {category.translations?.vi?.name || category.name}
+                      {categoryType?.translations?.vi?.name || categoryType?.name}
                     </p>
                     <p className="text-xs text-slate-400">
-                      {category.translations?.en?.name && (
-                        <span className="text-slate-500">{category.translations.en.name} • </span>
+                      {categoryType?.translations?.en?.name && (
+                        <span className="text-slate-500">{categoryType.translations.en.name} • </span>
                       )}
-                      ID: {category.id}
+                      ID: {categoryType?.id}
                     </p>
                   </div>
                   <div className="col-span-3 font-semibold text-slate-900">
-                    {category.slug}
-                  </div>
-                  <div className="col-span-2 text-sm text-slate-500">
-                    {categoryTypeMap[category.categories_type_id] || category.categories_type_id}
+                    {categoryType?.slug}
                   </div>
                   <div className="col-span-2 flex justify-end gap-2">
                     <button
                       type="button"
-                      onClick={() => handleEdit(category)}
+                      onClick={() => handleEdit(categoryType)}
                       className="rounded-2xl border border-slate-200 bg-white p-2 text-slate-500 transition hover:border-blue-200 hover:text-blue-600"
                     >
                       <Pencil size={16} />
                     </button>
                     <button
                       type="button"
-                      onClick={() => handleDelete(category.id)}
+                      onClick={() => handleDelete(categoryType?.id)}
                       className="rounded-2xl border border-slate-200 bg-white p-2 text-rose-500 transition hover:border-rose-200 hover:text-rose-600"
                       disabled={loading}
                     >
@@ -312,7 +304,7 @@ export default function CategoryManager() {
                   {formMode === "add" ? "Thêm mới" : "Chỉnh sửa"}
                 </p>
                 <h2 className="text-xl font-bold text-slate-900">
-                  {formMode === "add" ? "Danh mục mới" : `Sửa danh mục #${editingId}`}
+                  {formMode === "add" ? "Loại danh mục mới" : `Sửa loại danh mục #${editingId}`}
                 </h2>
               </div>
               {formMode === "edit" && (
@@ -330,7 +322,7 @@ export default function CategoryManager() {
             <div className="mt-4 space-y-4">
               <div>
                 <label className="mb-1 block text-sm font-semibold text-slate-700">
-                  Tên danh mục (Tiếng Việt)
+                  Tên loại danh mục (Tiếng Việt)
                 </label>
                 <input
                   type="text"
@@ -345,7 +337,7 @@ export default function CategoryManager() {
 
               <div>
                 <label className="mb-1 block text-sm font-semibold text-slate-700">
-                  Tên danh mục (Tiếng Anh)
+                  Tên loại danh mục (Tiếng Anh)
                 </label>
                 <input
                   type="text"
@@ -372,25 +364,6 @@ export default function CategoryManager() {
                   required
                 />
               </div>
-
-              <div>
-                <label className="mb-1 block text-sm font-semibold text-slate-700">
-                  Loại danh mục
-                </label>
-                <select
-                  name="categories_type_id"
-                  value={formData.categories_type_id}
-                  onChange={handleChange}
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-800 focus:border-blue-400 focus:outline-none"
-                  required
-                >
-                  {categoryTypes.map((type) => (
-                    <option key={type.id} value={type.id}>
-                      {type.translations.vi?.name || type.name || type.type || `Loại ${type.id}`}
-                    </option>
-                  ))}
-                </select>
-              </div>
             </div>
 
             <div className="mt-6 flex items-center gap-3">
@@ -400,7 +373,7 @@ export default function CategoryManager() {
                 className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-500 px-5 py-3 text-sm font-semibold text-white shadow-[0_15px_35px_rgba(59,130,246,.35)] transition hover:-translate-y-0.5 disabled:opacity-70"
               >
                 <Save size={18} />
-                {formMode === "add" ? "Lưu danh mục" : "Cập nhật"}
+                {formMode === "add" ? "Lưu loại danh mục" : "Cập nhật"}
               </button>
               <button
                 type="button"

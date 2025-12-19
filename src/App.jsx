@@ -26,6 +26,8 @@ import Register from "./pages/Register";
 import OrderHistory from "./components/OrderHistory";
 import GeminiChat from "./pages/GeminiChatWidget";
 import CategoryTypeManager from "./pages/Admin/CategoryTypeManager";
+
+import OrderAdmin from "./components/AdminOrderModal";
 function App() {
   return (
     <I18nextProvider i18n={i18n}>
@@ -54,6 +56,7 @@ function App() {
             <Route path="/checkout-preview" element={<CheckoutPreview />} />
             <Route path="/chatbot" element={<ChatbotPage />} />
             <Route path="/order" element={<OrderHistory />} />
+          
     
           </Route>
           <Route path="/admin">
@@ -61,6 +64,7 @@ function App() {
             <Route path="products" element={<ProductEditor />} />
             <Route path="categories" element={<CategoryManager />} />
             <Route path="category-types" element={<CategoryTypeManager />} />
+            <Route path="orderadmin" element={<OrderAdmin />} />
           </Route>
         </Routes>
       </Router>
