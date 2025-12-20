@@ -8,7 +8,7 @@ import Contact from "./pages/Contact";
 import ScrollToTop from "./components/ScrollToTop";
 import ProductCategoryPage from "./pages/ProductCategoryPage";
 import "./App.css";
-
+import 'react-toastify/dist/ReactToastify.css';
 import FilterContainer from './components/Filter/FilterContainer';
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";

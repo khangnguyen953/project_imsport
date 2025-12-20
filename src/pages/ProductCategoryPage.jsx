@@ -36,34 +36,58 @@ const ProductCategoryPage = () => {
     (filters.price &&
       (filters.price.min > PRICE_MIN || filters.price.max < PRICE_MAX));
 
-  // ==== Gom dữ liệu categories type & categories ====
-  const dataNew = useMemo(() => {
+  // // ==== Gom dữ liệu categories type & categories ====
+  // const dataNew = useMemo(() => {
 
-    // 1. Gom categories theo từng typeId (1 vòng)
-    const group = {};
-    for (const cat of categories) {
-      if (!group[cat.categories_type_id]) {
-        group[cat.categories_type_id] = [];
-      }
-      const productList = products.filter((p) => p.category_id === cat.id)
+  //   // 1. Gom categories theo từng typeId (1 vòng)
+  //   const group = {};
+  //   for (const cat of categories) {
+  //     if (!group[cat.categories_type_id]) {
+  //       group[cat.categories_type_id] = [];
+  //     }
+  //     const productList = products.filter((p) => p.category_id === cat.id)
 
-      group[cat.categories_type_id].push({
-        id: cat.id,
-        name: cat.translations[i18n.language].name,
-        slug: cat.slug,
-        products: productList
-      });
-    }
-    // 2. Tạo danh sách category type (1 vòng)
-    return categoriesType.map((type) => ({
-      id: type.id,
-      categoriesType: type.translations[i18n.language].name,
-      slug: type.slug,
-      description: type.translations[i18n.language].description,
-      categories: group[type.id] || [],
-    }));
+  //     group[cat.categories_type_id].push({
+  //       id: cat.id,
+  //       name: cat.translations[i18n.language].name,
+  //       slug: cat.slug,
+  //       products: productList
+  //     });
+  //   }
+  //   // 2. Tạo danh sách category type (1 vòng)
+  //   return categoriesType.map((type) => ({
+  //     id: type.id,
+  //     categoriesType: type.translations[i18n.language].name,
+  //     slug: type.slug,
+  //     description: type.translations[i18n.language].description,
+  //     categories: group[type.id] || [],
+  //   }));
+  // }, [categoriesType, categories, products, i18n.language]);
+  
+const dataNew = useMemo(() => {
+    // Duyệt qua từng Type
+    return categoriesType.map((type) => {
+      
+      // Với mỗi Type, lọc ngay danh sách categories con của nó
+      const catsInType = categories
+        .filter((cat) => cat.categories_type_id === type.id)
+        .map((cat) => ({
+          id: cat.id,
+          name: cat.translations?.[i18n.language]?.name || cat.name,
+          slug: cat.slug,
+          // Với mỗi Category, lọc ngay danh sách sản phẩm của nó
+          products: products.filter((p) => p.category_id === cat.id) 
+        }));
+
+      return {
+        id: type.id,
+        categoriesType: type.translations?.[i18n.language]?.name || type.name,
+        slug: type.slug,
+        description: type.translations?.[i18n.language]?.description || '',
+        categories: catsInType,
+      };
+    });
   }, [categoriesType, categories, products, i18n.language]);
-
 
   // lấy data API 1 lần 
   useEffect(() => {

@@ -6,6 +6,7 @@ import CheckoutAPI from '../service/CheckoutAPI';
 import { validateCheckoutForm, formatOrderData } from '../utils/checkoutValidation';
 import '../styles/pages/Checkout.scss';
 import { useTranslation } from 'react-i18next';
+import { ToastContainer, toast } from 'react-toastify';
 const Checkout = () => {
     
     const { cart, totalPrice,userId ,setCartCount} = useCart();
@@ -247,6 +248,9 @@ const Checkout = () => {
                 navigate('/');
                  localStorage.setItem("cart", "");
             setCartCount(0);
+            toast.success("Đặt hàng thành công");
+            }else{
+                toast.error("Có lỗi xảy ra, vui lòng thử lại! ");
             }
              
             //   navigate
@@ -600,6 +604,7 @@ const Checkout = () => {
                     </div>
                 </div>
             </div>
+       
         </div>
     );
 };
